@@ -1,4 +1,4 @@
-describe('Truth is in the Killing', function () {
+describe('Mirumoto Hitori', function () {
     integration(function () {
         beforeEach(function () {
             this.setupTest({

@@ -1,4 +1,4 @@
-describe('Battle Meditation', function() {
+describe('Battlefield Orders', function() {
     integration(function() {
         beforeEach(function() {
             this.setupTest({

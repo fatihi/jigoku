@@ -1,6 +1,6 @@
 const Game = require('../../../build/server/game/game.js');
 
-describe('Game', function() {
+describe('Game - Player Management', function() {
     beforeEach(function() {
         this.gameRouter = jasmine.createSpyObj('gameRouter', ['playerLeft']);
         this.game = new Game({ allowSpectators: true }, { router: this.gameRouter });
