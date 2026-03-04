@@ -6,13 +6,13 @@ describe('Ide Nobutada', function () {
                 player1: {
                     hand: ['fine-katana'],
                     inPlay: ['ide-nobutada'],
-                    dynastyDeck: ['shinjo-takame', 'cinder-salamander']
+                    dynastyDiscard: ['shinjo-takame']
                 }
             });
 
             this.fineKatana = this.player1.findCardByName('fine-katana');
             this.ideNobutada = this.player1.findCardByName('ide-nobutada');
-            this.shinjoTakame = this.player1.findCardByName('shinjo-takame');
+            this.shinjoTakame = this.player1.moveCard('shinjo-takame', 'dynasty deck');
 
             this.ideNobutada.honor();
             this.ideNobutada.modifyFate(1);
