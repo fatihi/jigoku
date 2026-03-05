@@ -57,5 +57,14 @@ describe('Scouts Steed', function () {
             expect(this.player1).not.toHavePromptButton('Pass Conflict');
             expect(this.game.currentConflict.attackers).toContain(this.shinjoArcher);
         });
+
+        it('the targeted province should be marked as inConflict', function () {
+            this.player1.clickCard(this.scoutsSteed);
+            this.player1.clickCard(this.shinjoArcher);
+            this.player1.clickCard(this.scoutsSteed);
+            this.player1.clickCard(this.fertileFacedown);
+
+            expect(this.fertileFacedown.inConflict).toBe(true);
+        });
     });
 });
