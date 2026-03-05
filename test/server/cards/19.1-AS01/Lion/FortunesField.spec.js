@@ -43,7 +43,12 @@ describe('Fortunes Field', function () {
             expect(this.player1).toBeAbleToSelect(this.field);
         });
 
-        xit('should react after playing a character from hand (dynasty)', function () {
+        it('should react after playing a character from hand (conflict phase)', function () {
+            this.player1.pass();
+            this.player2.pass();
+            this.player1.clickPrompt('1');
+            this.player2.clickPrompt('1');
+
             this.player1.clickCard(this.crone);
             this.player1.clickPrompt('0');
             expect(this.player1).toHavePrompt('Triggered Abilities');
@@ -71,11 +76,14 @@ describe('Fortunes Field', function () {
             expect(this.player1.fate).toBe(fate - cost);
         });
 
-        xit('reduces next follower', function () {
+        it('reduces next follower', function () {
             this.player1.clickCard(this.yoshi);
             this.player1.clickPrompt('0');
             this.player1.clickCard(this.field);
             this.player2.pass();
+            this.player1.pass();
+            this.player1.clickPrompt('1');
+            this.player2.clickPrompt('1');
 
             let fate = this.player1.fate;
             let cost = this.assistant.printedCost;
@@ -83,6 +91,8 @@ describe('Fortunes Field', function () {
             this.player1.clickCard(this.assistant);
             this.player1.clickCard(this.yoshi);
             expect(this.player1.fate).toBe(fate - (cost - 1));
+
+            this.player2.pass();
 
             fate = this.player1.fate;
             cost = this.commander.printedCost;
