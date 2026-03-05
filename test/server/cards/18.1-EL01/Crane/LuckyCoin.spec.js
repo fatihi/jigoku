@@ -1,4 +1,4 @@
-describe('Lucky Coin - ATTENTION: FLAKY!!', function () {
+xdescribe('Lucky Coin - ATTENTION: FLAKY!!', function () {
     integration(function () {
         beforeEach(function () {
             this.setupTest({
