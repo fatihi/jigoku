@@ -102,6 +102,7 @@ class Game extends EventEmitter {
     shortCardData: any[];
     router: any;
     allCards: BaseCard[];
+    private cardsByUuid = new Map<string, BaseCard>();
     provinceCards: BaseCard[];
     winner?: Player;
     finishedAt?: Date;
@@ -293,7 +294,7 @@ class Game extends EventEmitter {
      * Returns the card with matching uuid from anywhere in the game
      */
     findAnyCardInAnyList(cardId: string): BaseCard | undefined {
-        return this.allCards.find((card) => card.uuid === cardId);
+        return this.cardsByUuid.get(cardId);
     }
 
     /**
@@ -348,6 +349,7 @@ class Game extends EventEmitter {
             tokenCard = new token(card);
         }
         this.allCards.push(tokenCard);
+        this.cardsByUuid.set(tokenCard.uuid, tokenCard);
         return tokenCard;
     }
 
@@ -839,6 +841,10 @@ class Game extends EventEmitter {
         this.allCards = this.getPlayers().reduce((cards: BaseCard[], player: Player) => {
             return cards.concat(player.preparedDeck.allCards);
         }, []);
+        this.cardsByUuid.clear();
+        for(const card of this.allCards) {
+            this.cardsByUuid.set(card.uuid, card);
+        }
         this.provinceCards = this.allCards.filter((card) => (card as any).isProvince);
 
         if(this.gameMode !== GameModes.Skirmish) {
