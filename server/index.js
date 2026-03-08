@@ -10,7 +10,7 @@ async function runServer() {
     var server = new Server(process.env.NODE_ENV !== 'production');
     server.initDb();
     var httpServer = server.init();
-    var lobby = new Lobby(httpServer, { db: database });
+    var _lobby = new Lobby(httpServer, { db: database });
 
     server.run();
 }

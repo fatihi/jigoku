@@ -1,3 +1,3 @@
 import { GameServer } from './GameServer.js';
 
-const server = new GameServer();
+const _server = new GameServer();

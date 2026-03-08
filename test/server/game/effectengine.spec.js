@@ -101,7 +101,7 @@ describe('EffectEngine', function () {
             const mockEffect = {
                 checkCondition: jasmine.createSpy('checkCondition').and.callFake(function () {
                     callCount++;
-                    if (callCount === 1) {
+                    if(callCount === 1) {
                         // Simulate a new effect being added during condition check
                         engine.newEffect = true;
                     }
