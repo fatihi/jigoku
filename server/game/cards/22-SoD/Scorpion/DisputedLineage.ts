@@ -1,4 +1,4 @@
-import { CardTypes, Durations, Players } from '../../../Constants';
+import { CardTypes, Durations } from '../../../Constants';
 import AbilityDsl from '../../../abilitydsl';
 import DrawCard from '../../../drawcard';
 import type { TriggeredAbilityContext } from '../../../TriggeredAbilityContext';
@@ -21,7 +21,7 @@ export default class DisputedLineage extends DrawCard {
                         targetController: context.target.controller,
                         condition: () => context.target.isParticipating(),
                         effect: AbilityDsl.effects.playerCannot({
-                            cannot: 'honor',
+                            cannot: 'honor'
                         })
                     }))
                 ])
@@ -35,8 +35,7 @@ export default class DisputedLineage extends DrawCard {
                     target: context.player,
                     amount: 1
                 })
-            }),
-
+            })
         });
     }
 

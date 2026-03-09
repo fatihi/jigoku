@@ -14,7 +14,7 @@ export default class StrangeMirror extends DrawCard {
                     inPlay: {
                         cardType: CardTypes.Character,
                         controller: Players.Opponent,
-                        cardCondition: card => card.isParticipating(),
+                        cardCondition: card => card.isParticipating()
                     },
                     inDiscard: {
                         dependsOn: 'inPlay',

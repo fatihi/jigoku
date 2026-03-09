@@ -281,8 +281,6 @@ describe('SoD - Unicorn', function () {
             });
 
             it('when character was not participating', function () {
-                let honor = this.player2.honor;
-
                 this.noMoreActions();
                 this.initiateConflict({
                     type: 'military',

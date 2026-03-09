@@ -1,6 +1,6 @@
 import type { AbilityContext } from '../AbilityContext';
 import type BaseCard from '../basecard';
-import { CardTypes, CharacterStatus, EventNames, Locations, EffectNames } from '../Constants';
+import { CardTypes, CharacterStatus, EventNames, Locations } from '../Constants';
 import { type CardActionProperties, CardGameAction } from './CardGameAction';
 
 export type HonorProperties = CardActionProperties;
