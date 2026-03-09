@@ -9,23 +9,24 @@ describe('SoD - Crab', function () {
                         hand: ['a-bad-death']
                     },
                     player2: {
-                        inPlay: ['togashi-yokuni'],
+                        inPlay: ['togashi-yokuni', 'doji-challenger'],
                         hand: ['ornate-fan', 'fine-katana', 'banzai']
                     }
                 });
 
                 this.skirmisher = this.player1.findCardByName('silent-skirmisher');
                 this.swordsmith = this.player1.findCardByName('agasha-swordsmith');
-                this.badDeath = this.player1.findCardByName('a-bad-death');
+                this.challenger = this.player2.findCardByName('doji-challenger');
                 this.yokuni = this.player2.findCardByName('togashi-yokuni');
-                this.yokuni.honor();
+                this.badDeath = this.player1.findCardByName('a-bad-death');
             });
 
-            it('should prompt to choose a card to discard from randomly chosen cards in your opponent\'s hand', function () {
+            it('should dishonor characters and draw', function () {
+                let hand = this.player1.hand.length;
                 this.noMoreActions();
                 this.initiateConflict({
                     attackers: [this.skirmisher, this.swordsmith],
-                    defenders: [this.yokuni]
+                    defenders: [this.yokuni, this.challenger]
                 });
                 this.player2.pass();
                 this.player1.pass();
@@ -35,33 +36,25 @@ describe('SoD - Crab', function () {
                 this.player1.clickCard(this.badDeath);
                 this.player1.clickCard(this.swordsmith);
 
-                expect(this.player1).toHavePrompt('Select a card:');
-                let matchingButtons = this.player1.currentPrompt().buttons.filter(button =>
-                    ['Ornate Fan', 'Fine Katana', 'Banzai!'].includes(button.text)
-                );
-                expect(matchingButtons.length).toBe(1);
-                expect(this.player1.currentPrompt().buttons.length).toBe(1);
-                let conflictDiscardPileSize = this.player2.player.conflictDiscardPile.size();
-                let hand = this.player2.player.hand.size();
-                this.player1.clickPrompt(matchingButtons[0].text);
-                expect(this.player2.player.conflictDiscardPile.size()).toBe(conflictDiscardPileSize + 1);
-                expect(this.player2.player.hand.size()).toBe(hand - 1);
-                expect(this.getChatLogs(5)).toContain('player1 plays A Bad Death, dishonoring and sacrificing Agasha Swordsmith to look at 1 random card in player2\'s hand');
-                expect(this.getChatLogs(5)).toContain('player1 chooses ' + matchingButtons[0].text + ' to be discarded');
-                expect(this.getChatLogs(5)).toContain('A Bad Death sees ' + matchingButtons[0].text);
+                expect(this.player1).toHavePrompt('Select a character');
+                expect(this.player1).toBeAbleToSelect(this.yokuni);
+                expect(this.player1).toBeAbleToSelect(this.challenger);
+                this.player1.clickCard(this.yokuni);
+
+                this.player1.clickPrompt('Done');
+                expect(this.player1).toHavePrompt('Action Window');
+                expect(this.yokuni.isDishonored).toBe(true);
+                expect(this.player1.hand.length).toBe(hand);
+                expect(this.getChatLogs(5)).toContain('player1 plays A Bad Death, dishonoring and sacrificing Agasha Swordsmith to dishonor Togashi Yokuni');
+                expect(this.getChatLogs(5)).toContain('player1 draws a card');
             });
 
-            it('should prompt to choose a card to discard from randomly chosen cards in your opponent\'s hand (3 mil difference)', function () {
+            it('sacrificing berserker', function () {
                 this.noMoreActions();
                 this.initiateConflict({
                     attackers: [this.skirmisher, this.swordsmith],
-                    defenders: [this.yokuni]
+                    defenders: [this.yokuni, this.challenger]
                 });
-                this.player2.pass();
-
-                this.player1.clickCard(this.skirmisher);
-                this.player1.clickCard(this.swordsmith);
-
                 this.player2.pass();
                 this.player1.pass();
                 expect(this.player1).toHavePrompt('Triggered Abilities');
@@ -70,21 +63,18 @@ describe('SoD - Crab', function () {
                 this.player1.clickCard(this.badDeath);
                 this.player1.clickCard(this.skirmisher);
 
-                expect(this.player1).toHavePrompt('Select a card:');
-                let matchingButtons = this.player1.currentPrompt().buttons.filter(button =>
-                    ['Ornate Fan', 'Fine Katana', 'Banzai!'].includes(button.text)
-                );
-                expect(matchingButtons.length).toBe(3);
-                expect(this.player1.currentPrompt().buttons.length).toBe(3);
-                let conflictDiscardPileSize = this.player2.player.conflictDiscardPile.size();
-                let hand = this.player2.player.hand.size();
-                this.player1.clickPrompt(matchingButtons[0].text);
-                expect(this.player2.player.conflictDiscardPile.size()).toBe(conflictDiscardPileSize + 1);
-                expect(this.player2.player.hand.size()).toBe(hand - 1);
-                expect(this.getChatLogs(5)).toContain('player1 plays A Bad Death, dishonoring and sacrificing Silent Skirmisher to look at 3 random cards in player2\'s hand');
-                expect(this.getChatLogs(5)).toContain('player1 chooses ' + matchingButtons[0].text + ' to be discarded');
-                expect(this.getChatLogs(5)).toContain('A Bad Death sees ' + matchingButtons[0].text + ', ' + matchingButtons[1].text + ' and ' + matchingButtons[2].text);
+                expect(this.player1).toHavePrompt('Select up to 2 characters');
+                expect(this.player1).toBeAbleToSelect(this.yokuni);
+                expect(this.player1).toBeAbleToSelect(this.challenger);
+                this.player1.clickCard(this.yokuni);
+                this.player1.clickCard(this.challenger);
+
+                this.player1.clickPrompt('Done');
+                expect(this.player1).toHavePrompt('Action Window');
+                expect(this.yokuni.isDishonored).toBe(true);
+                expect(this.getChatLogs(5)).toContain('player1 plays A Bad Death, dishonoring and sacrificing Silent Skirmisher to dishonor Togashi Yokuni and Doji Challenger');
             });
+
         });
 
         describe('Caretaker of The Dead Eyes', function () {
@@ -262,10 +252,18 @@ describe('SoD - Crab', function () {
                 expect(this.player1).toBeAbleToSelect(this.assault);
                 this.player1.clickCard(this.assault);
 
-                expect(this.player1).toBeAbleToSelect(this.yokuni);
-                expect(this.player1).toBeAbleToSelect(this.challenger);
-                expect(this.player1).not.toBeAbleToSelect(this.brash);
-                expect(this.player1).not.toBeAbleToSelect(this.diplomat);
+                expect(this.player2).toHavePrompt('Choose defenders');
+                this.player2.clickCard(this.yokuni);
+                this.player2.clickCard(this.challenger);
+                this.player2.clickCard(this.brash);
+                this.player2.clickCard(this.diplomat);
+
+                this.player2.clickPrompt('Done');
+
+                expect(this.yokuni.isParticipating()).toBe(true);
+                expect(this.challenger.isParticipating()).toBe(true);
+                expect(this.brash.isParticipating()).toBe(false);
+                expect(this.diplomat.isParticipating()).toBe(false);
 
                 expect(this.getChatLogs(7)).toContain('player1 plays Reckless Assault to prevent characters with less than 3military from defending (this affects Brash Samurai and Doji Diplomat)');
             });

@@ -112,7 +112,6 @@ describe('SoD - Dragon', function () {
             });
 
             it('ephemeral attachment', function () {
-                console.log(this.night.hasEphemeral());
                 this.player1.clickCard(this.letGo);
                 this.player1.clickCard(this.night);
                 expect(this.night.location).toBe('removed from game');
