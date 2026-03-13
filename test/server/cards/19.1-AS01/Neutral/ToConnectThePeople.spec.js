@@ -54,7 +54,10 @@ describe('To Connect the People', function () {
                 this.player1.clickCard(this.toConnectThePeople);
                 expect(this.player2.player.dynastyDiscardPile.size()).toBe(initialDiscardPile + 3);
                 expect(this.getChatLogs(5)).toContain(
-                    'player1 plays To Connect the People to discard Adept of the Waves, Adept of the Waves and Adept of the Waves'
+                    'player1 plays To Connect the People to discard the top 3 cards of player2\'s dynasty deck'
+                );
+                expect(this.getChatLogs(5)).toContain(
+                    'To Connect the People discards Adept of the Waves, Adept of the Waves and Adept of the Waves'
                 );
             });
 
