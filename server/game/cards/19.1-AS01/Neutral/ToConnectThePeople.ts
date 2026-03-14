@@ -22,13 +22,13 @@ export default class ToConnectThePeople extends DrawCard {
                 AbilityDsl.actions.handler({
                     handler: (context) => {
                         const cards = context.player.opponent?.dynastyDeck.first(3) ?? [];
-                        for (const card of cards) {
+                        for(const card of cards) {
                             const destination = card.isDynasty
                                 ? Locations.DynastyDiscardPile
                                 : Locations.ConflictDiscardPile;
                             card.controller.moveCard(card, destination);
                         }
-                        if (cards.length > 0) {
+                        if(cards.length > 0) {
                             context.game.addMessage('{0} discards {1}', context.source, cards);
                         }
                     }
