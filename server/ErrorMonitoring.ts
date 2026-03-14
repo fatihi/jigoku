@@ -1,10 +1,12 @@
 // Error monitoring - logs errors to console
 // Previously used Sentry, now simplified to console logging
 
+import { inspect } from 'util';
+
 export function captureException(exception: any, extra?: Record<string, unknown>): void {
     console.error('Error captured:', exception);
     if(extra) {
-        console.error('Extra context:', extra);
+        console.error('Extra context:', inspect(extra, { depth: 4, colors: true }));
     }
 }
 
