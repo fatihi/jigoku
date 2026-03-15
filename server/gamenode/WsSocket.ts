@@ -1,34 +1,27 @@
 import EventEmitter from 'events';
-import { Dealer } from 'zeromq';
+import WebSocket from 'ws';
 import { z } from 'zod';
 import * as env from '../env.js';
 import { logger } from '../logger';
 
 const TEN_SECONDS = 10_000;
+const ONE_SECOND = 1_000;
+const MAX_RECONNECT_DELAY = 5_000;
 
-export class ZmqSocket extends EventEmitter {
-    private socket: Dealer;
+export class WsSocket extends EventEmitter {
+    private ws: WebSocket | null = null;
     private running = false;
     private registered = false;
-    private heartbeatInterval: ReturnType<typeof setInterval>;
+    private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+    private reconnectDelay = ONE_SECOND;
+    private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
     constructor(private listenAddress: string, private protocol: string) {
         super();
 
-        this.socket = new Dealer({ routingId: env.gameNodeName });
-        logger.info(`${env.gameNodeName} connecting to lobby at ${env.mqUrl}`);
-        this.socket.connect(env.mqUrl);
         this.running = true;
+        this.connect();
 
-        // Start receiving messages
-        this.receiveMessages();
-
-        // Connection is immediate in v6, emit connect event on next tick
-        setImmediate(() => this.onConnect());
-
-        // Send periodic heartbeat. If we're not registered with the lobby yet
-        // (e.g. HELLO was lost, or lobby didn't respond to REGISTER), re-send
-        // HELLO instead of a bare heartbeat so registration is retried.
         this.heartbeatInterval = setInterval(() => {
             if(this.registered) {
                 logger.debug(`${env.gameNodeName} sending HEARTBEAT`);
@@ -40,29 +33,59 @@ export class ZmqSocket extends EventEmitter {
         }, TEN_SECONDS);
     }
 
-    private async receiveMessages() {
-        while(this.running) {
-            try {
-                // Dealer receives [delimiter, message] - the router adds identity automatically
-                const [delimiter, msg] = await this.socket.receive();
-                this.onMessage(delimiter, msg.toString());
-            } catch(err) {
-                if(this.running) {
-                    logger.error(`Error receiving message: ${err}`);
-                }
-            }
-        }
-    }
+    private connect() {
+        const url = `${env.lobbyWsUrl}?identity=${encodeURIComponent(env.gameNodeName)}`;
+        logger.info(`${env.gameNodeName} connecting to lobby at ${url}`);
 
-    public send(command: string, arg?: unknown) {
-        // Dealer sends [delimiter, message] - router will add routing based on identity
-        this.socket.send(['', JSON.stringify({ command, arg })]).catch(err => {
-            logger.error(`Error sending message: ${err}`);
+        this.ws = new WebSocket(url);
+
+        this.ws.on('open', () => {
+            logger.info(`${env.gameNodeName} connected to lobby`);
+            this.reconnectDelay = ONE_SECOND;
+            this.emit('onGameSync', this.onGameSync.bind(this));
+        });
+
+        this.ws.on('message', (data: WebSocket.RawData) => {
+            this.onMessage(data.toString());
+        });
+
+        this.ws.on('close', () => {
+            logger.info(`${env.gameNodeName} disconnected from lobby`);
+            this.registered = false;
+            this.scheduleReconnect();
+        });
+
+        this.ws.on('error', (err: Error) => {
+            logger.error(`WebSocket error: ${err.message}`);
         });
     }
 
-    private onConnect() {
-        this.emit('onGameSync', this.onGameSync.bind(this));
+    private scheduleReconnect() {
+        if(!this.running) {
+            return;
+        }
+
+        logger.info(`${env.gameNodeName} reconnecting in ${this.reconnectDelay}ms`);
+        this.reconnectTimer = setTimeout(() => {
+            if(this.running) {
+                this.connect();
+            }
+        }, this.reconnectDelay);
+
+        this.reconnectDelay = Math.min(this.reconnectDelay * 2, MAX_RECONNECT_DELAY);
+    }
+
+    public send(command: string, arg?: unknown) {
+        if(!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+            logger.debug(`Cannot send ${command}, WebSocket not open`);
+            return;
+        }
+
+        try {
+            this.ws.send(JSON.stringify({ command, arg }));
+        } catch(err) {
+            logger.error(`Error sending message: ${err}`);
+        }
     }
 
     private onGameSync(games: any) {
@@ -78,21 +101,21 @@ export class ZmqSocket extends EventEmitter {
         });
     }
 
-    private parseMsg(msg: unknown) {
+    private parseMsg(msg: string) {
         try {
             return z
                 .object({
                     command: z.enum(['PING', 'REGISTER', 'STARTGAME', 'SPECTATOR', 'CONNECTFAILED', 'CLOSEGAME', 'CARDDATA']),
                     arg: z.any()
                 })
-                .parse(JSON.parse(msg.toString()));
+                .parse(JSON.parse(msg));
         } catch(e) {
-            logger.info(`Failed to parse ZMQ message: ${e}`);
+            logger.info(`Failed to parse message: ${e}`);
             return;
         }
     }
 
-    private onMessage(delimiter: unknown, msg: string) {
+    private onMessage(msg: string) {
         const message = this.parseMsg(msg);
 
         if(!message) {
@@ -105,7 +128,6 @@ export class ZmqSocket extends EventEmitter {
             logger.info(`${env.gameNodeName} received ${message.command} from lobby`);
         }
 
-        // Any message from the lobby means we're registered
         this.registered = true;
 
         switch(message.command) {
@@ -137,7 +159,14 @@ export class ZmqSocket extends EventEmitter {
 
     public close() {
         this.running = false;
-        clearInterval(this.heartbeatInterval);
-        this.socket.close();
+        if(this.heartbeatInterval) {
+            clearInterval(this.heartbeatInterval);
+        }
+        if(this.reconnectTimer) {
+            clearTimeout(this.reconnectTimer);
+        }
+        if(this.ws) {
+            this.ws.close();
+        }
     }
 }

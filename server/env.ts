@@ -17,7 +17,7 @@ const parsedEnv = z
         HTTPS: z.string(),
         LOBBY_PORT: z.coerce.number().int(),
         MAX_GAMES: z.coerce.number().int().optional(),
-        MQ_URL: z.string(),
+        LOBBY_WS_URL: z.string(),
         SECRET: z.string(),
         SENTRY_DSN: z.string().optional(),
         BUILD_VERSION: z.string().optional()
@@ -43,7 +43,7 @@ export const hmacSecret = parsedEnv.data.HMAC_SECRET;
 export const https = parsedEnv.data.HTTPS;
 export const lobbyPort = parsedEnv.data.LOBBY_PORT;
 export const maxGames = parsedEnv.data.MAX_GAMES;
-export const mqUrl = parsedEnv.data.MQ_URL;
+export const lobbyWsUrl = parsedEnv.data.LOBBY_WS_URL;
 export const secret = parsedEnv.data.SECRET;
 export const sentryDsn = parsedEnv.data.SENTRY_DSN;
 export const buildVersion = parsedEnv.data.BUILD_VERSION ?? 'LOCAL';

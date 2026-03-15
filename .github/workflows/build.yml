@@ -16,7 +16,7 @@ jobs:
       GAME_NODE_SOCKET_IO_PORT: 9500
       HTTPS: false
       LOBBY_PORT: 4000
-      MQ_URL: tcp://127.0.0.1:6000
+      LOBBY_WS_URL: ws://127.0.0.1:6000
       SECRET: test-secret
 
     steps:

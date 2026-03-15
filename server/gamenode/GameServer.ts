@@ -12,14 +12,14 @@ import { logger } from '../logger';
 import type PendingGame from '../pendinggame';
 import Socket from '../socket';
 import { detectBinary } from '../util';
-import { ZmqSocket } from './ZmqSocket';
+import { WsSocket } from './WsSocket';
 import * as env from '../env.js';
 
 export class GameServer {
     private games = new Map<string, Game>();
     private protocol = 'https';
     private host = env.domain;
-    private zmqSocket: ZmqSocket;
+    private wsSocket: WsSocket;
     private io: socketio.Server;
     private titleCardData: any;
     private shortCardData: any;
@@ -37,13 +37,13 @@ export class GameServer {
             this.protocol = env.https === 'true' ? 'https' : 'http';
         }
 
-        this.zmqSocket = new ZmqSocket(this.host, this.protocol);
-        this.zmqSocket.on('onStartGame', this.onStartGame.bind(this));
-        this.zmqSocket.on('onSpectator', this.onSpectator.bind(this));
-        this.zmqSocket.on('onGameSync', this.onGameSync.bind(this));
-        this.zmqSocket.on('onFailedConnect', this.onFailedConnect.bind(this));
-        this.zmqSocket.on('onCloseGame', this.onCloseGame.bind(this));
-        this.zmqSocket.on('onCardData', this.onCardData.bind(this));
+        this.wsSocket = new WsSocket(this.host, this.protocol);
+        this.wsSocket.on('onStartGame', this.onStartGame.bind(this));
+        this.wsSocket.on('onSpectator', this.onSpectator.bind(this));
+        this.wsSocket.on('onGameSync', this.onGameSync.bind(this));
+        this.wsSocket.on('onFailedConnect', this.onFailedConnect.bind(this));
+        this.wsSocket.on('onCloseGame', this.onCloseGame.bind(this));
+        this.wsSocket.on('onCardData', this.onCardData.bind(this));
 
         // HTTP request handler for health checks
         const requestHandler = (req: http.IncomingMessage, res: http.ServerResponse) => {
@@ -220,7 +220,7 @@ export class GameServer {
 
     gameWon(game: Game, reason: string, winner: Player): void {
         const saveState = game.getSaveState();
-        this.zmqSocket.send('GAMEWIN', { game: saveState, winner: winner.name, reason: reason });
+        this.wsSocket.send('GAMEWIN', { game: saveState, winner: winner.name, reason: reason });
 
         void axios
             .post(
@@ -280,7 +280,7 @@ export class GameServer {
 
         if(game.isEmpty()) {
             this.games.delete(game.id);
-            this.zmqSocket.send('GAMECLOSED', { game: game.id });
+            this.wsSocket.send('GAMECLOSED', { game: game.id });
         }
 
         this.sendGameState(game);
@@ -294,7 +294,7 @@ export class GameServer {
 
         this.games.delete(gameId);
         logger.info(`Closed game ${gameId}, remaining games: ${this.games.size}`);
-        this.zmqSocket.send('GAMECLOSED', { game: game.id });
+        this.wsSocket.send('GAMECLOSED', { game: game.id });
     }
 
     onCardData(cardData) {
@@ -359,9 +359,9 @@ export class GameServer {
         if(game.isEmpty()) {
             this.games.delete(game.id);
 
-            this.zmqSocket.send('GAMECLOSED', { game: game.id });
+            this.wsSocket.send('GAMECLOSED', { game: game.id });
         } else if(isSpectator) {
-            this.zmqSocket.send('PLAYERLEFT', {
+            this.wsSocket.send('PLAYERLEFT', {
                 gameId: game.id,
                 game: game.getSaveState(),
                 player: socket.user.username,
@@ -382,7 +382,7 @@ export class GameServer {
 
         game.leave(socket.user.username);
 
-        this.zmqSocket.send('PLAYERLEFT', {
+        this.wsSocket.send('PLAYERLEFT', {
             gameId: game.id,
             game: game.getSaveState(),
             player: socket.user.username,
@@ -395,7 +395,7 @@ export class GameServer {
         if(game.isEmpty()) {
             this.games.delete(game.id);
 
-            this.zmqSocket.send('GAMECLOSED', { game: game.id });
+            this.wsSocket.send('GAMECLOSED', { game: game.id });
         }
 
         this.sendGameState(game);
