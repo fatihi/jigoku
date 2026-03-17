@@ -201,6 +201,17 @@ export class GameServer {
         }
     }
 
+    notifyAndCloseGame(game: Game): void {
+        for(const player of Object.values(game.getPlayersAndSpectators()) as any[]) {
+            if(player.socket && !player.disconnected) {
+                player.socket.send('cleargamestate');
+                player.socket.leaveChannel(game.id);
+            }
+        }
+        this.games.delete(game.id);
+        this.wsSocket.send('GAMECLOSED', { game: game.id });
+    }
+
     startAbandonTimer(game: Game): void {
         if(this.abandonTimers.has(game.id)) {
             return;
@@ -213,8 +224,7 @@ export class GameServer {
             this.abandonTimers.delete(game.id);
             if(this.games.has(game.id)) {
                 logger.info(`Auto-closing abandoned game ${game.id} (${game.name})`);
-                this.games.delete(game.id);
-                this.wsSocket.send('GAMECLOSED', { game: game.id });
+                this.notifyAndCloseGame(game);
             }
         }, 5 * 60 * 1000);
 
@@ -325,9 +335,8 @@ export class GameServer {
             return;
         }
 
-        this.games.delete(gameId);
-        logger.info(`Closed game ${gameId}, remaining games: ${this.games.size}`);
-        this.wsSocket.send('GAMECLOSED', { game: game.id });
+        logger.info(`Closed game ${gameId}, remaining games: ${this.games.size - 1}`);
+        this.notifyAndCloseGame(game);
     }
 
     onCardData(cardData) {
