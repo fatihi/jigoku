@@ -5,7 +5,7 @@
     "main": "index.js",
     "scripts": {
         "test": "npm run jasmine",
-        "jasmine": "tsc && cross-env JASMINE_CONFIG_PATH=./jasmine.json DB_PATH=mongodb://localhost:27017/test DOMAIN=localhost ENVIRONMENT=test GAME_NODE_NAME=test GAME_NODE_SOCKET_IO_PORT=9500 HTTPS=false LOBBY_PORT=4000 MQ_URL=tcp://localhost:6000 SECRET=testsecret jasmine",
+        "jasmine": "tsc && cross-env JASMINE_CONFIG_PATH=./jasmine.json DB_PATH=mongodb://localhost:27017/test DOMAIN=localhost ENVIRONMENT=test GAME_NODE_NAME=test GAME_NODE_SOCKET_IO_PORT=9500 HTTPS=false LOBBY_PORT=4000 LOBBY_WS_URL=ws://localhost:6000 SECRET=testsecret jasmine",
         "lint": "eslint server/ test/server/",
         "typecheck": "tsc --noEmit",
         "typecheck:strict": "tsc --noEmit -p tsconfig.strict.json"
@@ -55,7 +55,7 @@
         "uuid": "^13.0.0",
         "winston": "^3.19.0",
         "winston-daily-rotate-file": "^5.0.0",
-        "zeromq": "^6.5.0",
+        "ws": "^8.18.0",
         "zod": "^4.3.6"
     },
     "devDependencies": {
@@ -69,6 +69,7 @@
         "eslint-plugin-jasmine": "^4.2.2",
         "globals": "^17.4.0",
         "jasmine": "^6.1.0",
+        "@types/ws": "^8.5.13",
         "prettier": "^3.8.1",
         "typescript": "^5.9.3"
     },

@@ -1,9 +1,10 @@
-const { Router } = require('zeromq');
+const { WebSocketServer } = require('ws');
 const { logger } = require('./logger');
 const db = require('./db.js');
 const EventEmitter = require('events');
 const GameService = require('./services/GameService.js');
 const env = require('./env.js');
+const url = require('url');
 
 class GameRouter extends EventEmitter {
     constructor() {
@@ -11,35 +12,45 @@ class GameRouter extends EventEmitter {
 
         this.workers = {};
         this.gameService = new GameService(db.getDb());
-        this.router = new Router();
-        this.running = false;
+        this.connections = new Map();
 
-        this.init(env.mqUrl);
+        this.init(env.lobbyWsUrl);
         setInterval(this.checkTimeouts.bind(this), 1000 * 60);
     }
 
-    async init(url) {
-        try {
-            await this.router.bind(url);
-            logger.info('GameRouter bound to', url);
-            this.running = true;
-            this.receiveMessages();
-        } catch(err) {
-            logger.error('Failed to bind GameRouter:', err);
-        }
-    }
+    init(listenUrl) {
+        const parsed = new URL(listenUrl);
+        const port = parseInt(parsed.port, 10) || 6000;
 
-    async receiveMessages() {
-        while(this.running) {
-            try {
-                const [identity, _delimiter, msg] = await this.router.receive();
-                this.onMessage(identity, msg);
-            } catch(err) {
-                if(this.running) {
-                    logger.error('Error receiving message:', err);
-                }
+        this.wss = new WebSocketServer({ port });
+        logger.info(`GameRouter listening on ws://0.0.0.0:${port}`);
+
+        this.wss.on('connection', (ws, req) => {
+            const parsed = url.parse(req.url, true);
+            const identity = parsed.query.identity;
+
+            if(!identity) {
+                logger.error('WebSocket connection without identity, closing');
+                ws.close();
+                return;
             }
-        }
+
+            logger.info(`Game node connected: ${identity}`);
+            this.connections.set(identity, ws);
+
+            ws.on('message', (data) => {
+                this.onMessage(identity, data);
+            });
+
+            ws.on('close', () => {
+                logger.info(`Game node disconnected: ${identity}`);
+                this.connections.delete(identity);
+            });
+
+            ws.on('error', (err) => {
+                logger.error(`WebSocket error from ${identity}: ${err.message}`);
+            });
+        });
     }
 
     // External methods
@@ -133,7 +144,7 @@ class GameRouter extends EventEmitter {
     }
 
     // Events
-    onMessage(identity, msg) {
+    onMessage(identity, data) {
         var identityStr = identity.toString();
 
         var worker = this.workers[identityStr];
@@ -141,7 +152,7 @@ class GameRouter extends EventEmitter {
         var message = undefined;
 
         try {
-            message = JSON.parse(msg.toString());
+            message = JSON.parse(data.toString());
         } catch(err) {
             logger.info(err);
             return;
@@ -179,7 +190,7 @@ class GameRouter extends EventEmitter {
                 if(worker) {
                     worker.numGames--;
                 } else {
-                    logger.error('Got close game for non existant worker', identity);
+                    logger.error('Got close game for non existent worker', identity);
                 }
 
                 this.emit('onGameClosed', message.arg.game);
@@ -202,9 +213,17 @@ class GameRouter extends EventEmitter {
 
     // Internal methods
     sendCommand(identity, command, arg) {
-        this.router.send([identity, '', JSON.stringify({ command: command, arg: arg })]).catch(err => {
-            logger.error('Error sending command:', err);
-        });
+        const ws = this.connections.get(identity);
+        if(!ws || ws.readyState !== 1) {
+            logger.error(`Cannot send ${command} to ${identity}: not connected`);
+            return;
+        }
+
+        try {
+            ws.send(JSON.stringify({ command: command, arg: arg }));
+        } catch(err) {
+            logger.error(`Error sending command: ${err}`);
+        }
     }
 
     checkTimeouts() {
@@ -226,8 +245,9 @@ class GameRouter extends EventEmitter {
     }
 
     close() {
-        this.running = false;
-        this.router.close();
+        if(this.wss) {
+            this.wss.close();
+        }
     }
 }
 
