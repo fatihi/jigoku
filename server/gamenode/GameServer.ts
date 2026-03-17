@@ -17,6 +17,7 @@ import * as env from '../env.js';
 
 export class GameServer {
     private games = new Map<string, Game>();
+    private abandonTimers = new Map<string, ReturnType<typeof setTimeout>>();
     private protocol = 'https';
     private host = env.domain;
     private wsSocket: WsSocket;
@@ -200,6 +201,34 @@ export class GameServer {
         }
     }
 
+    startAbandonTimer(game: Game): void {
+        if(this.abandonTimers.has(game.id)) {
+            return;
+        }
+
+        game.addAlert('info', 'Both players have left. This match will close in 5 minutes.');
+        this.sendGameState(game);
+
+        const timer = setTimeout(() => {
+            this.abandonTimers.delete(game.id);
+            if(this.games.has(game.id)) {
+                logger.info(`Auto-closing abandoned game ${game.id} (${game.name})`);
+                this.games.delete(game.id);
+                this.wsSocket.send('GAMECLOSED', { game: game.id });
+            }
+        }, 5 * 60 * 1000);
+
+        this.abandonTimers.set(game.id, timer);
+    }
+
+    cancelAbandonTimer(gameId: string): void {
+        const timer = this.abandonTimers.get(gameId);
+        if(timer) {
+            clearTimeout(timer);
+            this.abandonTimers.delete(gameId);
+        }
+    }
+
     handshake(socket: socketio.Socket, next: (err?: Error) => void) {
         // Socket.io v4 uses auth object, v1 used query string
         const token = (socket.handshake.auth as any)?.token || socket.handshake.query?.token;
@@ -279,14 +308,18 @@ export class GameServer {
         game.failedConnect(username);
 
         if(game.isEmpty()) {
+            this.cancelAbandonTimer(game.id);
             this.games.delete(game.id);
             this.wsSocket.send('GAMECLOSED', { game: game.id });
+        } else if(game.allPlayersGone()) {
+            this.startAbandonTimer(game);
         }
 
         this.sendGameState(game);
     }
 
     onCloseGame(gameId) {
+        this.cancelAbandonTimer(gameId);
         const game = this.games.get(gameId);
         if(!game) {
             return;
@@ -328,6 +361,11 @@ export class GameServer {
         if(player.disconnected) {
             logger.info('user \'%s\' reconnected to game', socket.user.username);
             game.reconnect(socket, player.name);
+
+            if(!game.isSpectator(player) && this.abandonTimers.has(game.id)) {
+                this.cancelAbandonTimer(game.id);
+                game.addAlert('info', 'A player has reconnected. Auto-close cancelled.');
+            }
         }
 
         socket.joinChannel(game.id);
@@ -357,9 +395,12 @@ export class GameServer {
         game.disconnect(socket.user.username);
 
         if(game.isEmpty()) {
+            this.cancelAbandonTimer(game.id);
             this.games.delete(game.id);
 
             this.wsSocket.send('GAMECLOSED', { game: game.id });
+        } else if(!isSpectator && game.allPlayersGone()) {
+            this.startAbandonTimer(game);
         } else if(isSpectator) {
             this.wsSocket.send('PLAYERLEFT', {
                 gameId: game.id,
@@ -393,9 +434,12 @@ export class GameServer {
         socket.leaveChannel(game.id);
 
         if(game.isEmpty()) {
+            this.cancelAbandonTimer(game.id);
             this.games.delete(game.id);
 
             this.wsSocket.send('GAMECLOSED', { game: game.id });
+        } else if(!isSpectator && game.allPlayersGone()) {
+            this.startAbandonTimer(game);
         }
 
         this.sendGameState(game);
