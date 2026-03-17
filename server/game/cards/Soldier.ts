@@ -40,10 +40,10 @@ export default class Soldier<D extends DrawCard> extends DrawCard {
 
     getSummary(activePlayer: Player, hideWhenFaceup: boolean) {
         const summary = super.getSummary(activePlayer, hideWhenFaceup);
-        const tokenProps = {
-            isToken: true,
-            id: activePlayer === this.controller ? this.facedownCard.cardData.id : undefined
-        };
+        const tokenProps =
+            activePlayer === this.controller
+                ? { id: this.facedownCard.cardData.id, isToken: true }
+                : { isToken: true };
         return Object.assign(summary, tokenProps);
     }
 }
