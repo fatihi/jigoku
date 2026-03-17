@@ -34,7 +34,8 @@ class CardService {
                         side: card.side, deck_limit: card.deck_limit, elements: card.elements,
                         is_unique: card.is_unique, influence_cost: card.influence_cost,
                         influence_pool: card.influence_pool, pack_cards: card.pack_cards,
-                        role_restriction: card.role_restriction, allowed_clans: card.allowed_clans
+                        role_restriction: card.role_restriction, allowed_clans: card.allowed_clans,
+                        versions: card.versions
                     };
                 } else {
                     cards[card.id] = card;

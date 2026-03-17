@@ -1,5 +1,6 @@
 import { GameModes } from '../GameModes';
 import { CardTypes, Locations } from './Constants';
+import { resolvePackId } from './CardPackUtil';
 import { ProvinceCard } from './ProvinceCard';
 import { RoleCard } from './RoleCard';
 import { StrongholdCard } from './StrongholdCard';
@@ -8,24 +9,8 @@ import { cards } from './cards';
 import DrawCard from './drawcard';
 import Player from './player';
 
-const communityFormats = new Set([GameModes.Emerald, GameModes.Sanctuary, GameModes.Obsidian]);
-
 export class Deck {
     constructor(public data: any) {}
-
-    private resolvePackId(packId: string | undefined, card: any, gameMode: string): string | undefined {
-        if(packId) {
-            return packId;
-        }
-        const versions = card?.versions;
-        if(versions && versions.length > 0) {
-            if(communityFormats.has(gameMode as GameModes)) {
-                return versions[versions.length - 1].pack_id;
-            }
-            return versions[0].pack_id;
-        }
-        return undefined;
-    }
 
     prepare(player: Player) {
         const result = {
@@ -48,7 +33,7 @@ export class Deck {
                     // @ts-expect-error -- CardConstructor is dynamically resolved from card registry, constructor signature not statically known
                     const conflictCard: DrawCard = new CardConstructor(player, card);
                     conflictCard.location = Locations.ConflictDeck;
-                    conflictCard.packId = this.resolvePackId(packId, card, player.game.gameMode);
+                    conflictCard.packId = resolvePackId(packId, card, player.game.gameMode);
                     result.conflictCards.push(conflictCard);
                 }
             }
@@ -62,7 +47,7 @@ export class Deck {
                     // @ts-expect-error -- CardConstructor is dynamically resolved from card registry, constructor signature not statically known
                     const dynastyCard: DrawCard = new CardConstructor(player, card);
                     dynastyCard.location = Locations.DynastyDeck;
-                    dynastyCard.packId = this.resolvePackId(packId, card, player.game.gameMode);
+                    dynastyCard.packId = resolvePackId(packId, card, player.game.gameMode);
                     result.dynastyCards.push(dynastyCard);
                 }
             }
@@ -77,7 +62,7 @@ export class Deck {
                         // @ts-expect-error -- CardConstructor is dynamically resolved from card registry, constructor signature not statically known
                         const provinceCard: ProvinceCard = new CardConstructor(player, card);
                         provinceCard.location = Locations.ProvinceDeck;
-                        provinceCard.packId = this.resolvePackId(packId, card, player.game.gameMode);
+                        provinceCard.packId = resolvePackId(packId, card, player.game.gameMode);
                         result.provinceCards.push(provinceCard);
                     }
                 }
@@ -99,7 +84,7 @@ export class Deck {
                         // @ts-expect-error -- CardConstructor is dynamically resolved from card registry, constructor signature not statically known
                         const strongholdCard: StrongholdCard = new CardConstructor(player, card);
                         strongholdCard.location = '' as any;
-                        strongholdCard.packId = this.resolvePackId(packId, card, player.game.gameMode);
+                        strongholdCard.packId = resolvePackId(packId, card, player.game.gameMode);
                         result.stronghold = strongholdCard;
                     }
                 }
@@ -110,7 +95,7 @@ export class Deck {
                         const CardConstructor = cards.get(card.id) ?? RoleCard;
                         // @ts-expect-error -- CardConstructor is dynamically resolved from card registry, constructor signature not statically known
                         const roleCard: RoleCard = new CardConstructor(player, card);
-                        roleCard.packId = this.resolvePackId(packId, card, player.game.gameMode);
+                        roleCard.packId = resolvePackId(packId, card, player.game.gameMode);
                         result.role = roleCard;
                     }
                 }

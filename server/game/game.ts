@@ -37,6 +37,7 @@ import SpiritOfTheRiver from './cards/SpiritOfTheRiver';
 
 import { EffectNames, Phases, EventNames, Locations, ConflictTypes, Elements } from './Constants';
 import { GameModes } from '../GameModes.js';
+import { resolvePackId } from './CardPackUtil';
 import type BaseCard from './basecard';
 import type DrawCard from './drawcard';
 
@@ -661,12 +662,14 @@ class Game extends EventEmitter {
                 return;
             }
 
-            const card = this.shortCardData.find((c: any) => {
+            const card = Object.values(this.shortCardData).find((c: any) => {
                 return c.name.toLowerCase() === message.toLowerCase() || c.id.toLowerCase() === message.toLowerCase();
-            });
+            }) as any;
 
             if(card) {
-                this.gameChat.addChatMessage(player as Player, { message: this.gameChat.formatMessage('{0}', [card]) });
+                const packId = resolvePackId(undefined, card, this.gameMode);
+                const cardFragment = { id: card.id, name: card.name, type: card.type, packId };
+                this.gameChat.addChatMessage(player as Player, { message: this.gameChat.formatMessage('{0}', [cardFragment]) });
 
                 return;
             }
