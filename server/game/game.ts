@@ -1126,6 +1126,12 @@ class Game extends EventEmitter {
         );
     }
 
+    allPlayersGone(): boolean {
+        return this.started && this.getPlayers().every(
+            (player) => player.disconnected || player.left
+        );
+    }
+
     leave(playerName: string): void {
         const player = this.playersAndSpectators[playerName];
 
