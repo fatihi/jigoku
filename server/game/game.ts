@@ -1316,7 +1316,8 @@ class Game extends EventEmitter {
             lostProvinces: player
                 .getProvinceCards()
                 .reduce((count: number, card: any) => (card && card.isBroken ? count + 1 : count), 0),
-            deck: this.formatDeckForSaving(player.deck)
+            deck: this.formatDeckForSaving(player.deck),
+            deckId: player.deck?._id?.toString()
         }));
 
         return {
