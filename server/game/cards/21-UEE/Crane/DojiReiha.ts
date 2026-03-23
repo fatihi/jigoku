@@ -20,7 +20,7 @@ export default class DojiReiha extends DrawCard {
                             options: {
                                 'Move all duel participants home': {
                                     action: AbilityDsl.actions.sendHome({
-                                        target: duel.loser.concat(...duel.winner)
+                                        target: duel.participants
                                     })
                                 },
                                 'Do nothing': {
