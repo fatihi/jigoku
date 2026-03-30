@@ -2,7 +2,7 @@ import * as winston from 'winston';
 import 'winston-daily-rotate-file';
 
 const rotate = new winston.transports.DailyRotateFile({
-    filename: __dirname + '/logs/ringteki',
+    filename: __dirname + '/logs/jigoku',
     datePattern: '-yyyy-MM-dd.log',
     json: false,
     zippedArchive: true

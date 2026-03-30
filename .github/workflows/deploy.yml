@@ -65,7 +65,7 @@ jobs:
         continue-on-error: true
         uses: actions/delete-package-versions@v5
         with:
-          package-name: ringteki
+          package-name: jigoku
           package-type: container
           min-versions-to-keep: 3
           delete-only-untagged-versions: false
