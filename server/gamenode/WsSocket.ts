@@ -20,7 +20,7 @@ export class WsSocket extends EventEmitter {
         super();
 
         this.running = true;
-        this.connect();
+        process.nextTick(() => this.connect());
 
         this.heartbeatInterval = setInterval(() => {
             if(this.registered) {
