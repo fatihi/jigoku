@@ -5,18 +5,19 @@ describe('Our Duty!', function () {
                 this.setupTest({
                     phase: 'conflict',
                     player1: {
-                        inPlay: ['kaiu-envoy', 'borderlands-defender'],
+                        inPlay: ['kaiu-envoy', 'borderlands-defender', 'matsu-berserker'],
                         hand: ['our-duty-']
                     },
                     player2: {
-                        inPlay: ['matsu-berserker']
+                        inPlay: ['adept-of-the-waves']
                     }
                 });
 
                 this.kaiuEnvoy = this.player1.findCardByName('kaiu-envoy');
                 this.borderlandsDefender = this.player1.findCardByName('borderlands-defender');
                 this.ourDuty = this.player1.findCardByName('our-duty-');
-                this.matsuBerserker = this.player2.findCardByName('matsu-berserker');
+                this.matsuBerserker = this.player1.findCardByName('matsu-berserker');
+                this.adept = this.player2.findCardByName('adept-of-the-waves');
             });
 
             it('should not be playable during the first round', function () {
@@ -31,9 +32,9 @@ describe('Our Duty!', function () {
 
                 expect(this.kaiuEnvoy.location).toBe('dynasty discard pile');
                 expect(this.player2).toHavePrompt('Choose a character to sacrifice');
-                this.player2.clickCard(this.matsuBerserker);
+                this.player2.clickCard(this.adept);
 
-                expect(this.matsuBerserker.location).toBe('dynasty discard pile');
+                expect(this.adept.location).toBe('dynasty discard pile');
             });
 
             it('should only allow sacrificing crab characters', function () {
@@ -48,7 +49,7 @@ describe('Our Duty!', function () {
                 this.game.roundNumber = 2;
                 this.player1.clickCard(this.ourDuty);
                 this.player1.clickCard(this.kaiuEnvoy);
-                this.player2.clickCard(this.matsuBerserker);
+                this.player2.clickCard(this.adept);
 
                 this.player2.pass();
 
