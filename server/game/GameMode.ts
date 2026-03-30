@@ -39,7 +39,6 @@ export interface GameMode {
     fatePhasePutFateOnRings: boolean;
     honorBidValues: string[];
     imperialFavorHasSides: boolean;
-    rallyHasEffect: boolean;
     ringAirChoices: (optional: boolean) => RingChoices;
     ringEarthChoices: (optional: boolean) => RingChoices;
     ringWaterTargetCondition: (card: BaseCard, context: AbilityContext) => boolean;
@@ -73,7 +72,6 @@ const Stronghold: GameMode = {
     fatePhasePutFateOnRings: true,
     honorBidValues: ['1', '2', '3', '4', '5'],
     imperialFavorHasSides: true,
-    rallyHasEffect: true,
     setupFixedStartingHonor: undefined,
     setupHaveProvinceCards: true,
     setupHaveRoles: true,
@@ -146,13 +144,6 @@ const Skirmish: GameMode = {
     winConRequiredHonorForWin: 12
 };
 
-const JadeEdict: GameMode = {
-    ...Stronghold,
-    name: 'jade-edict',
-
-    rallyHasEffect: false
-};
-
 const Emerald: GameMode = {
     ...Stronghold,
     name: 'emerald',
@@ -187,8 +178,6 @@ export function parseGameMode(candidateStr: string): GameMode {
     switch(candidateStr) {
         case 'skirmish':
             return Skirmish;
-        case 'jade-edict':
-            return JadeEdict;
         case 'emerald':
             return Emerald;
         case 'sanctuary':
