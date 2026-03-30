@@ -8,7 +8,7 @@ export default class OurDuty extends DrawCard {
     public setupCardAbilities() {
         this.action({
             title: 'Make your opponent sacrifice a character',
-            condition: (context) => Boolean(context.player.opponent),
+            condition: (context) => context.game.roundNumber > 1 && Boolean(context.player.opponent),
             cost: AbilityDsl.costs.sacrifice({
                 cardType: CardTypes.Character,
                 cardCondition: (card: DrawCard) => card.isFaction('crab')
