@@ -1,9 +1,12 @@
+const { GameModes } = require('../../../../../build/server/GameModes');
+
 describe('Foreign Customs', function () {
     integration(function () {
         describe('action - ready', function () {
             beforeEach(function () {
                 this.setupTest({
                     phase: 'conflict',
+                    gameMode: GameModes.Emerald,
                     player1: {
                         hand: ['foreign-customs'],
                         inPlay: ['adept-of-the-waves', 'sand-road-merchant', 'worldly-shiotome']
@@ -38,6 +41,7 @@ describe('Foreign Customs', function () {
             beforeEach(function () {
                 this.setupTest({
                     phase: 'conflict',
+                    gameMode: GameModes.Emerald,
                     player1: {
                         hand: ['foreign-customs', 'composite-yumi'],
                         inPlay: ['adept-of-the-waves', 'wandering-ronin']
@@ -71,6 +75,7 @@ describe('Foreign Customs', function () {
             beforeEach(function () {
                 this.setupTest({
                     phase: 'conflict',
+                    gameMode: GameModes.Emerald,
                     player1: {
                         fate: 20,
                         inPlay: ['doji-challenger', 'kakita-yoshi', 'daidoji-uji']
