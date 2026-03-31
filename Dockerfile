@@ -19,12 +19,11 @@ FROM node:24.14-alpine3.23
 
 WORKDIR /app
 
-COPY --from=builder /app/build ./build
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./
+COPY --from=builder --chown=node:node /app/build ./build
+COPY --from=builder --chown=node:node /app/node_modules ./node_modules
+COPY --from=builder --chown=node:node /app/package.json ./
 
-# Create logs directory and set ownership for node user
-RUN mkdir -p /app/build/server/logs && chown -R node:node /app/build/server/logs
+RUN mkdir -p /app/build/server/logs
 
 ARG BUILD_VERSION=LOCAL
 ENV NODE_ENV=production
