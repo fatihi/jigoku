@@ -1,15 +1,6 @@
-FROM node:24-bookworm-slim AS builder
+FROM node:24.14-alpine3.23 AS builder
 
 WORKDIR /app
-
-# Install build dependencies for native modules
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        python3 \
-        make \
-        g++ \
-        git \
-    && rm -rf /var/lib/apt/lists/*
 
 COPY package*.json ./
 
@@ -23,13 +14,8 @@ ENV BUILD_VERSION=$BUILD_VERSION
 RUN mkdir -p server/logs && npx tsc
 
 # Production stage
-FROM node:24-bookworm-slim
-
+FROM node:24.14-alpine3.23
 # Install runtime dependencies
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        tini \
-    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -51,5 +37,4 @@ EXPOSE 9500
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
     CMD node -e "require('http').get('http://localhost:9500/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))" || exit 1
 
-ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["node", "build/server/gamenode/index.js"]
