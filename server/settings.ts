@@ -14,7 +14,8 @@ const defaultOptionSettings = {
     confirmOneClick: false,
     disableCardStats: false,
     showStatusInSidebar: false,
-    sortHandByName: false
+    sortHandByName: false,
+    showRingEffects: false
 };
 
 const defaultSettings = {
@@ -56,6 +57,7 @@ type User = {
             disableCardStats: boolean;
             showStatusInSidebar: boolean;
             sortHandByName: boolean;
+            showRingEffects: boolean;
         }>;
         timerSettings: Partial<{
             events: boolean;
