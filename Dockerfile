@@ -23,7 +23,7 @@ COPY --from=builder --chown=node:node /app/build ./build
 COPY --from=builder --chown=node:node /app/node_modules ./node_modules
 COPY --from=builder --chown=node:node /app/package.json ./
 
-RUN mkdir -p /app/build/server/logs
+RUN mkdir -p /app/build/server/logs && chown -R node:node /app/build/server/logs
 
 ARG BUILD_VERSION=LOCAL
 ENV NODE_ENV=production
