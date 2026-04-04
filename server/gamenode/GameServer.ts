@@ -171,6 +171,11 @@ export class GameServer {
         const totalMessages = allMessages.length;
         let spectatorState: any = null;
 
+        // Record hidden info (hands + facedown provinces) for replay enrichment
+        if(game.started) {
+            game.hiddenInfoLog.push(game.getHiddenInfo());
+        }
+
         for(const player of Object.values(game.getPlayersAndSpectators()) as any[]) {
             if(player.socket && !player.left && !player.disconnected) {
                 let state: any;
@@ -267,6 +272,14 @@ export class GameServer {
                 saveState
             )
             .catch(() => {});
+
+        // Send hidden info log (hands + provinces) to both players for replay enrichment
+        const hiddenInfoLog = game.hiddenInfoLog;
+        for(const player of game.getPlayers()) {
+            if(player.socket && !player.disconnected) {
+                player.socket.send('hiddeninfo', hiddenInfoLog);
+            }
+        }
     }
 
     onStartGame(pendingGame: PendingGame): void {

@@ -108,6 +108,7 @@ class Game extends EventEmitter {
     winner?: Player;
     finishedAt?: Date;
     winReason?: string;
+    hiddenInfoLog: any[];
     startedAt?: Date;
     private _playersCache: Player[] | null = null;
     private _spectatorsCache: Spectator[] | null = null;
@@ -153,6 +154,7 @@ class Game extends EventEmitter {
         this.shortCardData = options.shortCardData || [];
         this.allCards = [];
         this.provinceCards = [];
+        this.hiddenInfoLog = [];
 
         Object.values(details.players).forEach((player: any) => {
             this.playersAndSpectators[player.user.username] = new Player(
@@ -1396,6 +1398,33 @@ class Game extends EventEmitter {
             rings: ringState,
             messages: this.gameChat.messages
         });
+    }
+
+    /**
+     * Build a snapshot of hidden card identities (hands + facedown provinces) for replay enrichment.
+     * Called each time game state is sent so the log can be merged into the client replay at game end.
+     */
+    getHiddenInfo(): any {
+        const info: Record<string, any> = {};
+        for(const player of this.getPlayers()) {
+            const cardSummary = (card: any) => ({
+                id: card.cardData.id,
+                name: card.cardData.name,
+                packId: card.packId,
+                type: card.getType(),
+                uuid: card.uuid
+            });
+            info[player.name] = {
+                hand: player.hand.map(cardSummary),
+                provinces: {
+                    one: player.provinceOne.map(cardSummary),
+                    two: player.provinceTwo.map(cardSummary),
+                    three: player.provinceThree.map(cardSummary),
+                    four: player.provinceFour.map(cardSummary)
+                }
+            };
+        }
+        return info;
     }
 
     /*
