@@ -28,7 +28,11 @@ class SetupProvincesPrompt extends AllPlayerPrompt {
 
     highlightSelectableCards() {
         this.game.getPlayers().forEach(player => {
-            player.setSelectableCards(this.selectableCards[player.uuid]);
+            let cards = this.selectableCards[player.uuid];
+            if(!this.strongholdProvince[player.uuid]) {
+                cards = cards.filter(card => !card.cannotBeStrongholdProvince());
+            }
+            player.setSelectableCards(cards);
         });
     }
 
