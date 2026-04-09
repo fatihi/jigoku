@@ -109,6 +109,7 @@ class Game extends EventEmitter {
     finishedAt?: Date;
     winReason?: string;
     hiddenInfoLog: any[];
+    private lastHiddenInfoFingerprint = '';
     startedAt?: Date;
     private _playersCache: Player[] | null = null;
     private _spectatorsCache: Spectator[] | null = null;
@@ -1404,6 +1405,29 @@ class Game extends EventEmitter {
      * Build a snapshot of hidden card identities (hands + facedown provinces) for replay enrichment.
      * Called each time game state is sent so the log can be merged into the client replay at game end.
      */
+    getHiddenInfoFingerprint(): string {
+        const parts: string[] = [];
+        for(const player of this.getPlayers()) {
+            parts.push(player.name);
+            parts.push(player.hand.map((c: any) => c.uuid).join(','));
+            parts.push(player.strongholdProvince.map((c: any) => c.uuid).join(','));
+            parts.push(player.provinceOne.map((c: any) => c.uuid).join(','));
+            parts.push(player.provinceTwo.map((c: any) => c.uuid).join(','));
+            parts.push(player.provinceThree.map((c: any) => c.uuid).join(','));
+            parts.push(player.provinceFour.map((c: any) => c.uuid).join(','));
+        }
+        return parts.join('|');
+    }
+
+    recordHiddenInfoIfChanged(): void {
+        const fingerprint = this.getHiddenInfoFingerprint();
+        if(fingerprint === this.lastHiddenInfoFingerprint) {
+            return;
+        }
+        this.lastHiddenInfoFingerprint = fingerprint;
+        this.hiddenInfoLog.push(this.getHiddenInfo());
+    }
+
     getHiddenInfo(): any {
         const info: Record<string, any> = {};
         for(const player of this.getPlayers()) {
@@ -1417,6 +1441,7 @@ class Game extends EventEmitter {
             info[player.name] = {
                 hand: player.hand.map(cardSummary),
                 provinces: {
+                    stronghold: player.strongholdProvince.map(cardSummary),
                     one: player.provinceOne.map(cardSummary),
                     two: player.provinceTwo.map(cardSummary),
                     three: player.provinceThree.map(cardSummary),

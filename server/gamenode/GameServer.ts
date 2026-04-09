@@ -181,9 +181,9 @@ export class GameServer {
         const totalMessages = allMessages.length;
         let spectatorState: any = null;
 
-        // Record hidden info (hands + facedown provinces) for replay enrichment
+        // Record hidden info (hands + facedown provinces) for replay enrichment — only when changed
         if(game.started) {
-            game.hiddenInfoLog.push(game.getHiddenInfo());
+            game.recordHiddenInfoIfChanged();
         }
 
         for(const player of Object.values(game.getPlayersAndSpectators()) as any[]) {
