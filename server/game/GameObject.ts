@@ -17,6 +17,7 @@ export class GameObject {
     protected printedType = '';
     private facedown = false;
     private effects = [] as CardEffect[];
+    private effectsByType = new Map<EffectNames, CardEffect[]>();
     private suppressEffectCount = 0;
 
     public constructor(
@@ -34,6 +35,12 @@ export class GameObject {
 
     public addEffect(effect: CardEffect) {
         this.effects.push(effect);
+        const bucket = this.effectsByType.get(effect.type);
+        if(bucket) {
+            bucket.push(effect);
+        } else {
+            this.effectsByType.set(effect.type, [effect]);
+        }
         if(effect.type === EffectNames.SuppressEffects) {
             this.suppressEffectCount++;
         }
@@ -44,9 +51,28 @@ export class GameObject {
             this.suppressEffectCount--;
         }
         this.effects = this.effects.filter((e) => e !== effect);
+        const bucket = this.effectsByType.get(effect.type);
+        if(bucket) {
+            const idx = bucket.indexOf(effect);
+            if(idx !== -1) {
+                bucket.splice(idx, 1);
+            }
+            if(bucket.length === 0) {
+                this.effectsByType.delete(effect.type);
+            }
+        }
     }
 
     public getEffects<V = any>(type: EffectNames): V[] {
+        // Fast path: no suppress effects — use indexed lookup
+        if(this.suppressEffectCount === 0) {
+            const bucket = this.effectsByType.get(type);
+            if(!bucket || bucket.length === 0) {
+                return [];
+            }
+            return bucket.map((effect) => effect.getValue(this));
+        }
+        // Slow path: suppress effects present — filter from raw effects
         let filteredEffects = this.getRawEffects().filter((effect) => effect.type === type);
         return filteredEffects.map((effect) => effect.getValue(this));
     }
@@ -57,6 +83,11 @@ export class GameObject {
     }
 
     public anyEffect(type: EffectNames) {
+        // Fast path: no suppress effects — check index directly
+        if(this.suppressEffectCount === 0) {
+            const bucket = this.effectsByType.get(type);
+            return !!bucket && bucket.length > 0;
+        }
         return this.getEffects(type).length > 0;
     }
 
