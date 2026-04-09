@@ -91,13 +91,13 @@ export class GameServer {
         for(const game of this.games.values()) {
             const players = [];
             for(const player of Object.values<any>(game.playersAndSpectators)) {
-                return {
+                players.push({
                     name: player.name,
                     left: player.left,
                     disconnected: player.disconnected,
                     id: player.id,
                     spectator: game.isSpectator(player)
-                };
+                });
             }
             games.push({
                 name: game.name,
