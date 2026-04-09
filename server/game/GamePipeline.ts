@@ -6,24 +6,28 @@ import type { Step } from './gamesteps/Step';
 type StepFactory = () => Step;
 type StepItem = Step | StepFactory;
 
+const COMPACT_THRESHOLD = 64;
+
 export class GamePipeline {
     public pipeline: Array<StepItem> = [];
     public queue: Array<StepItem> = [];
+    private cursor = 0;
 
     initialise(steps: StepItem[]): void {
         this.pipeline = steps;
+        this.cursor = 0;
     }
 
     get length(): number {
-        return this.pipeline.length;
+        return this.pipeline.length - this.cursor;
     }
 
     getCurrentStep(): Step {
-        const step = this.pipeline[0];
+        const step = this.pipeline[this.cursor];
 
         if(typeof step === 'function') {
             const createdStep = step();
-            this.pipeline[0] = createdStep;
+            this.pipeline[this.cursor] = createdStep;
             return createdStep;
         }
 
@@ -31,8 +35,8 @@ export class GamePipeline {
     }
 
     queueStep(step: Step) {
-        if(this.pipeline.length === 0) {
-            this.pipeline.unshift(step);
+        if(this.length === 0) {
+            this.pipeline.push(step);
         } else {
             var currentStep = this.getCurrentStep();
             if(currentStep.queueStep) {
@@ -44,7 +48,7 @@ export class GamePipeline {
     }
 
     cancelStep() {
-        if(this.pipeline.length === 0) {
+        if(this.length === 0) {
             return;
         }
 
@@ -57,11 +61,11 @@ export class GamePipeline {
             }
         }
 
-        this.pipeline.shift();
+        this.#advance();
     }
 
     handleCardClicked(player: Player, card: BaseCard) {
-        if(this.pipeline.length > 0) {
+        if(this.length > 0) {
             var step = this.getCurrentStep();
             if(step.onCardClicked(player, card) !== false) {
                 return true;
@@ -72,7 +76,7 @@ export class GamePipeline {
     }
 
     handleRingClicked(player: Player, ring: Ring) {
-        if(this.pipeline.length === 0) {
+        if(this.length === 0) {
             return false;
         }
 
@@ -83,7 +87,7 @@ export class GamePipeline {
     }
 
     handleMenuCommand(player: Player, arg: string, uuid: string, method: string) {
-        if(this.pipeline.length === 0) {
+        if(this.length === 0) {
             return false;
         }
 
@@ -94,7 +98,7 @@ export class GamePipeline {
     continue() {
         this.#queueIntoPipeline();
 
-        while(this.pipeline.length > 0) {
+        while(this.length > 0) {
             const currentStep = this.getCurrentStep();
 
             // Explicitly check for a return of false - if no return values is
@@ -104,7 +108,7 @@ export class GamePipeline {
                     return false;
                 }
             } else {
-                this.pipeline.shift();
+                this.#advance();
             }
 
             this.#queueIntoPipeline();
@@ -112,14 +116,26 @@ export class GamePipeline {
         return true;
     }
 
+    #advance() {
+        this.cursor++;
+        if(this.cursor >= COMPACT_THRESHOLD && this.cursor >= this.pipeline.length / 2) {
+            this.pipeline = this.pipeline.slice(this.cursor);
+            this.cursor = 0;
+        }
+    }
+
     #queueIntoPipeline() {
-        this.pipeline.unshift(...this.queue);
+        if(this.queue.length === 0) {
+            return;
+        }
+        // Insert queued items at the cursor position (front of active pipeline)
+        this.pipeline.splice(this.cursor, 0, ...this.queue);
         this.queue = [];
     }
 
     getDebugInfo() {
         return {
-            pipeline: this.pipeline.map((step) => this.getDebugInfoForStep(step)),
+            pipeline: this.pipeline.slice(this.cursor).map((step) => this.getDebugInfoForStep(step)),
             queue: this.queue.map((step) => this.getDebugInfoForStep(step))
         };
     }
