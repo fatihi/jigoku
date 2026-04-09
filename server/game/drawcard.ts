@@ -260,6 +260,11 @@ class DrawCard extends BaseCard {
 
         // Shallow copy arrays
         clone.effects = [...this.effects];
+        const clonedIndex = new Map();
+        for(const [k, v] of (this as any).effectsByType) {
+            clonedIndex.set(k, [...v]);
+        }
+        (clone as any).effectsByType = clonedIndex;
         clone.statusTokens = [...this.statusTokens];
         clone.traits = Array.from(this.getTraits());
         clone.tokens = Object.assign({}, this.tokens);
