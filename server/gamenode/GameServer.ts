@@ -17,6 +17,7 @@ import * as env from '../env.js';
 
 export class GameServer {
     private games = new Map<string, Game>();
+    private userGameMap = new Map<string, Game>();
     private abandonTimers = new Map<string, ReturnType<typeof setTimeout>>();
     private protocol = 'https';
     private host = env.domain;
@@ -157,10 +158,19 @@ export class GameServer {
     }
 
     findGameForUser(username: string): undefined | Game {
-        for(const game of this.games.values()) {
-            const player = game.playersAndSpectators[username];
-            if(player && !player.left) {
-                return game;
+        return this.userGameMap.get(username);
+    }
+
+    private registerUsersForGame(game: Game): void {
+        for(const username of Object.keys(game.playersAndSpectators)) {
+            this.userGameMap.set(username, game);
+        }
+    }
+
+    private unregisterUsersForGame(game: Game): void {
+        for(const username of Object.keys(game.playersAndSpectators)) {
+            if(this.userGameMap.get(username) === game) {
+                this.userGameMap.delete(username);
             }
         }
     }
@@ -213,6 +223,7 @@ export class GameServer {
                 player.socket.leaveChannel(game.id);
             }
         }
+        this.unregisterUsersForGame(game);
         this.games.delete(game.id);
         this.wsSocket.send('GAMECLOSED', { game: game.id });
     }
@@ -287,6 +298,7 @@ export class GameServer {
         logger.info(`Starting game ${pendingGame.id} (${playerNames}), total games: ${this.games.size + 1}`);
         const game = new Game(pendingGame as any, { router: this, shortCardData: this.shortCardData });
         this.games.set(pendingGame.id, game);
+        this.registerUsersForGame(game);
 
         game.started = true;
         for(const player of Object.values<Player>(pendingGame.players)) {
@@ -303,6 +315,7 @@ export class GameServer {
         }
 
         game.watch('TBA', user);
+        this.userGameMap.set(user.username, game);
 
         this.sendGameState(game);
     }
@@ -329,9 +342,11 @@ export class GameServer {
         }
 
         game.failedConnect(username);
+        this.userGameMap.delete(username);
 
         if(game.isEmpty()) {
             this.cancelAbandonTimer(game.id);
+            this.unregisterUsersForGame(game);
             this.games.delete(game.id);
             this.wsSocket.send('GAMECLOSED', { game: game.id });
         } else if(game.allPlayersGone()) {
@@ -418,12 +433,14 @@ export class GameServer {
 
         if(game.isEmpty()) {
             this.cancelAbandonTimer(game.id);
+            this.unregisterUsersForGame(game);
             this.games.delete(game.id);
 
             this.wsSocket.send('GAMECLOSED', { game: game.id });
         } else if(!isSpectator && game.allPlayersGone()) {
             this.startAbandonTimer(game);
         } else if(isSpectator) {
+            this.userGameMap.delete(socket.user.username);
             this.wsSocket.send('PLAYERLEFT', {
                 gameId: game.id,
                 game: game.getSaveState(),
@@ -444,6 +461,7 @@ export class GameServer {
         const isSpectator = game.isSpectator(game.playersAndSpectators[socket.user.username]);
 
         game.leave(socket.user.username);
+        this.userGameMap.delete(socket.user.username);
 
         this.wsSocket.send('PLAYERLEFT', {
             gameId: game.id,
@@ -457,6 +475,7 @@ export class GameServer {
 
         if(game.isEmpty()) {
             this.cancelAbandonTimer(game.id);
+            this.unregisterUsersForGame(game);
             this.games.delete(game.id);
 
             this.wsSocket.send('GAMECLOSED', { game: game.id });

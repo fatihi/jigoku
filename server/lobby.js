@@ -18,6 +18,7 @@ class Lobby {
         this.sockets = {};
         this.users = {};
         this.games = {};
+        this.userGameMap = new Map();
         this.messageService = options.messageService || new MessageService(options.db);
         this.deckService = options.deckService || new DeckService(options.db);
         this.cardService = options.cardService || new CardService(options.db);
@@ -109,19 +110,21 @@ class Lobby {
 
     // Helpers
     findGameForUser(user) {
-        return Object.values(this.games).find((game) => {
-            if(game.spectators[user]) {
-                return true;
+        return this.userGameMap.get(user);
+    }
+
+    registerUsersForGame(game) {
+        for(const username of Object.keys(game.getPlayersAndSpectators())) {
+            this.userGameMap.set(username, game);
+        }
+    }
+
+    unregisterUsersForGame(game) {
+        for(const username of Object.keys(game.getPlayersAndSpectators())) {
+            if(this.userGameMap.get(username) === game) {
+                this.userGameMap.delete(username);
             }
-
-            var player = game.players[user];
-
-            if(!player || player.left) {
-                return false;
-            }
-
-            return true;
-        });
+        }
     }
 
     getUserList() {
@@ -248,6 +251,7 @@ class Lobby {
     clearGamesForNode(nodeName) {
         Object.values(this.games).forEach((game) => {
             if(game.node && game.node.identity === nodeName) {
+                this.unregisterUsersForGame(game);
                 delete this.games[game.id];
             }
         });
@@ -265,11 +269,13 @@ class Lobby {
 
         stalePendingGames.forEach((game) => {
             logger.info('closed pending game', game.id, 'due to inactivity');
+            this.unregisterUsersForGame(game);
             delete this.games[game.id];
         });
 
         emptyGames.forEach((game) => {
             logger.info('closed started game', game.id, 'due to no active players');
+            this.unregisterUsersForGame(game);
             delete this.games[game.id];
             this.router.closeGame(game);
         });
@@ -360,6 +366,7 @@ class Lobby {
         game.disconnect(socket.user.username);
 
         if(game.isEmpty()) {
+            this.unregisterUsersForGame(game);
             delete this.games[game.id];
         } else {
             this.sendGameState(game);
@@ -386,6 +393,7 @@ class Lobby {
             this.sendGameState(game);
 
             this.games[game.id] = game;
+            this.userGameMap.set(socket.user.username, game);
             this.broadcastGameList();
         });
     }
@@ -409,6 +417,7 @@ class Lobby {
             }
 
             socket.joinChannel(game.id);
+            this.userGameMap.set(socket.user.username, game);
 
             this.sendGameState(game);
 
@@ -472,6 +481,7 @@ class Lobby {
             }
 
             socket.joinChannel(game.id);
+            this.userGameMap.set(socket.user.username, game);
 
             if(game.started) {
                 this.router.addSpectator(game, socket.user);
@@ -494,10 +504,12 @@ class Lobby {
         }
 
         game.leave(socket.user.username);
+        this.userGameMap.delete(socket.user.username);
         socket.send('cleargamestate');
         socket.leaveChannel(game.id);
 
         if(game.isEmpty()) {
+            this.unregisterUsersForGame(game);
             delete this.games[game.id];
         } else {
             this.sendGameState(game);
@@ -616,6 +628,7 @@ class Lobby {
         logger.info(socket.user.username, 'closed game', game.id, '(' + game.name + ') forcefully');
 
         if(!game.started) {
+            this.unregisterUsersForGame(game);
             delete this.games[game.id];
         } else {
             this.router.closeGame(game);
@@ -630,6 +643,7 @@ class Lobby {
             return;
         }
 
+        this.unregisterUsersForGame(game);
         delete this.games[gameId];
 
         this.broadcastGameList();
@@ -643,8 +657,10 @@ class Lobby {
         }
 
         game.leave(player);
+        this.userGameMap.delete(player);
 
         if(game.isEmpty()) {
+            this.unregisterUsersForGame(game);
             delete this.games[gameId];
         }
 
@@ -694,6 +710,7 @@ class Lobby {
             });
 
             this.games[syncGame.id] = syncGame;
+            this.registerUsersForGame(syncGame);
         });
 
         Object.values(this.games).forEach((game) => {
@@ -706,6 +723,7 @@ class Lobby {
             ) {
                 this.games[game.id] = game;
             } else if(game.node && game.node.identity === nodeName) {
+                this.unregisterUsersForGame(game);
                 delete this.games[game.id];
             }
         });
