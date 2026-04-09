@@ -52,9 +52,9 @@ class DeckBuilder {
         let stronghold = defaultStronghold;
         let provinceDeck = [];
         let conflictDeck = [];
-        let conflictDeckSize = conflictBuffer; 
+        let conflictDeckSize = conflictBuffer;
         let dynastyDeck = [];
-        let dynastyDeckSize = dynastyBuffer; 
+        let dynastyDeckSize = dynastyBuffer;
         let inPlayCards = []; // Considered separately, because may consist of both dynasty and conflict
 
         if(player.faction) {
@@ -82,7 +82,7 @@ class DeckBuilder {
             }
         }
         //Fill the deck up to minimum number of provinces
-        if (gameMode !== GameModes.Skirmish) {
+        if(gameMode !== GameModes.Skirmish) {
             while(provinceDeck.length < minProvince) {
                 provinceDeck.push(provinceFiller);
             }
@@ -202,7 +202,7 @@ class DeckBuilder {
 
     getShadowlandsSummonables() {
         const val = [];
-    
+
         val.push(this.cards['bloodthirsty-kansen']);
         val.push(this.cards['bog-hag']);
         val.push(this.cards['dark-moto']);
@@ -219,7 +219,7 @@ class DeckBuilder {
         val.push(this.cards['skeletal-warrior']);
         val.push(this.cards['undead-horror']);
         val.push(this.cards['wild-ogre']);
-    
+
         return val;
     };
 }

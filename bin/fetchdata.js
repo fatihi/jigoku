@@ -7,7 +7,7 @@ const path = require('path');
 const pathToJSON = path.join(__dirname, '../test/json/Card');
 
 const [, , env] = process.argv;
-if (env !== 'beta' && env !== 'prod') {
+if(env !== 'beta' && env !== 'prod') {
     console.error('You must specify the environment to fetch data from. The options are `beta` or `prod`.');
     process.exit(1);
 }

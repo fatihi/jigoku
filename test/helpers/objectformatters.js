@@ -10,7 +10,7 @@ const Player = require('../../build/server/game/player.js');
 function formatObject(keys) {
     return function () {
         const formattedProperties = [];
-        for (const key of keys) {
+        for(const key of keys) {
             const value = this[key];
             formattedProperties.push(`key:${util.inspect(value)}`);
         }
