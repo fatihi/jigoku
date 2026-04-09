@@ -486,6 +486,28 @@ export class GameServer {
         this.sendGameState(game);
     }
 
+    private static readonly ALLOWED_GAME_COMMANDS = new Set([
+        'cardClicked',
+        'changeStat',
+        'chat',
+        'concede',
+        'drop',
+        'facedownCardClicked',
+        'menuButton',
+        'menuItemClick',
+        'ringClicked',
+        'ringMenuItemClick',
+        'selectDeck',
+        'showConflictDeck',
+        'showDynastyDeck',
+        'shuffleConflictDeck',
+        'shuffleDynastyDeck',
+        'toggleManualMode',
+        'toggleOptionSetting',
+        'togglePromptedActionWindow',
+        'toggleTimerSetting'
+    ]);
+
     onGameMessage(socket, command, ...args) {
         const game = this.findGameForUser(socket.user.username);
 
@@ -497,7 +519,8 @@ export class GameServer {
             return this.onLeaveGame(socket);
         }
 
-        if(!game[command] || typeof game[command] !== 'function') {
+        if(!GameServer.ALLOWED_GAME_COMMANDS.has(command)) {
+            logger.info(`Rejected unknown game command '${command}' from ${socket.user.username}`);
             return;
         }
 
