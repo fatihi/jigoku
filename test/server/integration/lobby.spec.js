@@ -1,5 +1,4 @@
 const Lobby = require('../../../build/server/lobby.js');
-const _ = require('underscore');
 
 describe('lobby', function() {
     beforeEach(function() {
@@ -14,7 +13,7 @@ describe('lobby', function() {
         this.cardService.getAllCards.and.resolveTo([]);
 
         this.lobby = new Lobby({}, { io: this.ioSpy, messageService: {}, cardService: this.cardService, deckService: {}, router: this.routerSpy, config: {} });
-        this.lobby.sockets[this.socketSpy.id] = this.socketSpy;
+        this.lobby.sockets.set(this.socketSpy.id, this.socketSpy);
     });
 
     describe('onNewGame', function() {
@@ -24,8 +23,8 @@ describe('lobby', function() {
             });
 
             it('should create a new game with the player in it', function() {
-                expect(_.size(this.lobby.games)).toBe(1);
-                var gamesArray = _.toArray(this.lobby.games);
+                expect(this.lobby.games.size).toBe(1);
+                var gamesArray = Array.from(this.lobby.games.values());
                 var player = gamesArray[0].players['test'];
 
                 expect(player.name).toBe('test');
@@ -39,7 +38,7 @@ describe('lobby', function() {
             });
 
             it('should only create 1 game', function() {
-                expect(_.size(this.lobby.games)).toBe(1);
+                expect(this.lobby.games.size).toBe(1);
             });
         });
     });
