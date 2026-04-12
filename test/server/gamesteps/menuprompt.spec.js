@@ -1,4 +1,4 @@
-const MenuPrompt = require('../../../build/server/game/gamesteps/menuprompt.js');
+const { default: MenuPrompt } = require('../../../build/server/game/gamesteps/menuprompt.js');
 const Player = require('../../../build/server/game/player.js');
 
 describe('the MenuPrompt', function() {
