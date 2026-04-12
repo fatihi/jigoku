@@ -1,17 +1,22 @@
-const { BaseStepWithPipeline } = require('../gamesteps/BaseStepWithPipeline.js');
-const ForcedTriggeredAbilityWindow = require('../gamesteps/forcedtriggeredabilitywindow.js');
-const { SimpleStep } = require('../gamesteps/SimpleStep.js');
-const TriggeredAbilityWindow = require('../gamesteps/triggeredabilitywindow.js');
-const { AbilityTypes } = require('../Constants');
-const KeywordAbilityWindow = require('../gamesteps/keywordabilitywindow.js');
+import { BaseStepWithPipeline } from '../gamesteps/BaseStepWithPipeline';
+import ForcedTriggeredAbilityWindow from '../gamesteps/forcedtriggeredabilitywindow';
+import { SimpleStep } from '../gamesteps/SimpleStep';
+import TriggeredAbilityWindow from '../gamesteps/triggeredabilitywindow';
+import { AbilityTypes } from '../Constants';
+import KeywordAbilityWindow from '../gamesteps/keywordabilitywindow';
+import type Game from '../game';
+import type { Event } from './Event';
 
-class EventWindow extends BaseStepWithPipeline {
-    constructor(game, events) {
+export default class EventWindow extends BaseStepWithPipeline {
+    events: Event[] = [];
+    thenAbilities: Array<{ ability: any; context: any; condition: (event: Event) => boolean }> = [];
+    provincesToRefill: any[] = [];
+    previousEventWindow: EventWindow | null = null;
+    eventsToExecute: Event[] = [];
+
+    constructor(game: Game, events: Event[]) {
         super(game);
 
-        this.events = [];
-        this.thenAbilities = [];
-        this.provincesToRefill = [];
         events.forEach(event => {
             if(!event.cancelled) {
                 this.addEvent(event);
@@ -43,18 +48,18 @@ class EventWindow extends BaseStepWithPipeline {
         ]);
     }
 
-    addEvent(event) {
+    addEvent(event: Event): Event {
         event.setWindow(this);
         this.events.push(event);
         return event;
     }
 
-    removeEvent(event) {
+    removeEvent(event: Event): Event {
         this.events = this.events.filter(e => e !== event);
         return event;
     }
 
-    addThenAbility(ability, context, condition = event => event.isFullyResolved(event)) {
+    addThenAbility(ability: any, context: any, condition: (event: Event) => boolean = event => event.isFullyResolved()) {
         this.thenAbilities.push({ ability, context, condition });
     }
 
@@ -67,7 +72,7 @@ class EventWindow extends BaseStepWithPipeline {
         this.events.forEach(event => event.checkCondition());
     }
 
-    openWindow(abilityType) {
+    openWindow(abilityType: AbilityTypes) {
         if(this.events.length === 0) {
             return;
         }
@@ -81,7 +86,7 @@ class EventWindow extends BaseStepWithPipeline {
 
     // This is primarily for LeavesPlayEvents
     createContingentEvents() {
-        let contingentEvents = [];
+        let contingentEvents: Event[] = [];
         this.events.forEach(event => {
             contingentEvents = contingentEvents.concat(event.createContingentEvents());
         });
@@ -116,10 +121,10 @@ class EventWindow extends BaseStepWithPipeline {
 
     checkGameState() {
         this.eventsToExecute = this.eventsToExecute.filter(event => !event.cancelled);
-        this.game.checkGameState(this.eventsToExecute.some(event => event.handler), this.eventsToExecute);
+        this.game.checkGameState(this.eventsToExecute.some(event => (event as any).handler), this.eventsToExecute);
     }
 
-    checkKeywordAbilities(abilityType) {
+    checkKeywordAbilities(abilityType: AbilityTypes) {
         if(this.events.length === 0) {
             return;
         }
@@ -144,5 +149,3 @@ class EventWindow extends BaseStepWithPipeline {
         }
     }
 }
-
-module.exports = EventWindow;

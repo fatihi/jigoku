@@ -1,8 +1,18 @@
-const { UiPrompt } = require('./UiPrompt.js');
-const { EventNames, Locations, Players, EffectNames } = require('../Constants');
+import { UiPrompt } from './UiPrompt';
+import { EventNames, Locations, Players, EffectNames } from '../Constants';
+import type Game from '../game';
+import type Player from '../player';
 
 class ActionWindow extends UiPrompt {
-    constructor(game, title, windowName) {
+    title: string;
+    windowName: string;
+    currentPlayer: Player;
+    currentPlayerConsecutiveActions: number;
+    opportunityCounter: number;
+    prevPlayerPassed: boolean;
+    bonusActions: Record<string, { actionCount: number; actionsTaken: boolean; takingActions: boolean }> | undefined;
+
+    constructor(game: Game, title: string, windowName: string) {
         super(game);
 
         this.title = title;
@@ -17,25 +27,25 @@ class ActionWindow extends UiPrompt {
         this.prevPlayerPassed = false;
     }
 
-    activeCondition(player) {
+    activeCondition(player: Player): boolean {
         return player === this.currentPlayer;
     }
 
-    onCardClicked(player, card) {
+    onCardClicked(player: Player, card: any): boolean {
         if(player !== this.currentPlayer) {
             return false;
         }
 
         let actions = card.getActions();
 
-        let legalActions = actions.filter(action => action.meetsRequirements(action.createContext(player)) === '');
+        let legalActions = actions.filter((action: any) => action.meetsRequirements(action.createContext(player)) === '');
 
         if(legalActions.length === 0) {
             return false;
         } else if(legalActions.length === 1) {
             let action = legalActions[0];
-            let targetPrompts = action.targets.some(target => target.properties.player !== Players.Opponent);
-            if(!this.currentPlayer.optionSettings.confirmOneClick || action.cost.some(cost => cost.promptsPlayer) || targetPrompts) {
+            let targetPrompts = action.targets.some((target: any) => target.properties.player !== Players.Opponent);
+            if(!this.currentPlayer.optionSettings.confirmOneClick || action.cost.some((cost: any) => cost.promptsPlayer) || targetPrompts) {
                 this.resolveAbility(action.createContext(player));
                 return true;
             }
@@ -43,13 +53,13 @@ class ActionWindow extends UiPrompt {
         this.game.promptWithHandlerMenu(player, {
             activePromptTitle: (card.location === Locations.PlayArea ? 'Choose an ability:' : 'Play ' + card.name + ':'),
             source: card,
-            choices: legalActions.map(action => action.title).concat('Cancel'),
-            handlers: legalActions.map(action => (() => this.resolveAbility(action.createContext(player)))).concat(() => true)
+            choices: legalActions.map((action: any) => action.title).concat('Cancel'),
+            handlers: legalActions.map((action: any) => (() => this.resolveAbility(action.createContext(player)))).concat(() => true)
         });
         return true;
     }
 
-    resolveAbility(context) {
+    resolveAbility(context: any) {
         const resolver = this.game.resolveAbility(context);
         this.game.queueSimpleStep(() => {
             if(resolver.passPriority) {
@@ -58,7 +68,7 @@ class ActionWindow extends UiPrompt {
         });
     }
 
-    postResolutionUpdate(resolver) { // eslint-disable-line no-unused-vars
+    postResolutionUpdate(_resolver: any) {
         this.currentPlayerConsecutiveActions += 1;
         this.prevPlayerPassed = false;
         let allowableConsecutiveActions = this.getCurrentPlayerConsecutiveActions();
@@ -97,7 +107,7 @@ class ActionWindow extends UiPrompt {
     }
 
     activePrompt() {
-        let buttons = [
+        let buttons: Array<{ text: string; arg: string }> = [
             { text: 'Pass', arg: 'pass' }
         ];
         if(this.game.manualMode) {
@@ -114,15 +124,15 @@ class ActionWindow extends UiPrompt {
         return { menuTitle: 'Waiting for opponent to take an action or pass' };
     }
 
-    menuCommand(player, choice) {
+    menuCommand(player: Player, choice: string) {
         if(choice === 'manual') {
             this.game.promptForSelect(this.currentPlayer, {
                 source: 'Manual Action',
                 activePrompt: 'Which ability are you using?',
                 location: Locations.Any,
                 controller: Players.Self,
-                cardCondition: card => card.isFaceup(),
-                onSelect: (player, card) => {
+                cardCondition: (card: any) => card.isFaceup(),
+                onSelect: (player: Player, card: any) => {
                     this.game.addMessage('{0} uses {1}\'s ability', player, card);
                     this.prevPlayerPassed = false;
                     this.nextPlayer();
@@ -138,7 +148,7 @@ class ActionWindow extends UiPrompt {
         }
     }
 
-    getCurrentPlayerConsecutiveActions() {
+    getCurrentPlayerConsecutiveActions(): number {
         let allowableConsecutiveActions = this.currentPlayer.sumEffects(EffectNames.AdditionalAction);
         if(this.bonusActions) {
             const bonusActions = this.bonusActions[this.currentPlayer.uuid];
@@ -189,7 +199,7 @@ class ActionWindow extends UiPrompt {
         }
     }
 
-    checkBonusActions() {
+    checkBonusActions(): boolean {
         if(!this.bonusActions) {
             if(!this.setupBonusActions()) {
                 return false;
@@ -199,8 +209,8 @@ class ActionWindow extends UiPrompt {
         const player1 = this.game.getFirstPlayer();
         const player2 = player1.opponent;
 
-        const p1 = this.bonusActions[player1.uuid];
-        const p2 = this.bonusActions[player2.uuid];
+        const p1 = this.bonusActions![player1.uuid];
+        const p2 = this.bonusActions![player2.uuid];
 
         if(p1.actionCount > 0) {
             if(!p1.actionsTaken) {
@@ -230,7 +240,7 @@ class ActionWindow extends UiPrompt {
         return false;
     }
 
-    setupBonusActions() {
+    setupBonusActions(): boolean {
         const player1 = this.game.getFirstPlayer();
         const player2 = player1.opponent;
         let p1ActionsPostWindow = player1.sumEffects(EffectNames.AdditionalActionAfterWindowCompleted);
@@ -285,4 +295,4 @@ class ActionWindow extends UiPrompt {
     }
 }
 
-module.exports = ActionWindow;
+export = ActionWindow;

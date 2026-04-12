@@ -1,8 +1,14 @@
-const { Event } = require('./Event.js');
-const { EventNames } = require('../Constants');
+import { Event } from './Event';
+import { EventNames } from '../Constants';
 
 class InitiateCardAbilityEvent extends Event {
-    constructor(params, handler) {
+    cardTargets: any[];
+    ringTargets: any[];
+    selectTargets: any[];
+    tokenTargets: any[];
+    allTargets: any[];
+
+    constructor(params: any, handler?: (event: any) => void) {
         super(EventNames.OnInitiateAbilityEffects, params, handler);
         if(!this.context.ability.doesNotTarget) {
             this.cardTargets = Object.values(this.context.targets).flat();
@@ -19,4 +25,4 @@ class InitiateCardAbilityEvent extends Event {
     }
 }
 
-module.exports = InitiateCardAbilityEvent;
+export = InitiateCardAbilityEvent;

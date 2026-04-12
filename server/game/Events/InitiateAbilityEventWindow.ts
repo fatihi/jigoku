@@ -1,15 +1,19 @@
-const EventWindow = require('./EventWindow.js');
-const TriggeredAbilityWindow = require('../gamesteps/triggeredabilitywindow');
-const { EventNames, AbilityTypes } = require('../Constants');
+import EventWindow from './EventWindow';
+import TriggeredAbilityWindow from '../gamesteps/triggeredabilitywindow';
+import { EventNames, AbilityTypes } from '../Constants';
+import type Game from '../game';
+import type { Event } from './Event';
 
 class InitiateAbilityInterruptWindow extends TriggeredAbilityWindow {
-    constructor(game, abilityType, eventWindow) {
+    playEvent: any;
+
+    constructor(game: Game, abilityType: AbilityTypes, eventWindow: EventWindow) {
         super(game, abilityType, eventWindow);
         this.playEvent = eventWindow.events.find(event => event.name === EventNames.OnCardPlayed);
     }
 
     getPromptForSelectProperties() {
-        let buttons = [];
+        let buttons: Array<{ text: string; arg: string }> = [];
         if(this.playEvent && this.currentPlayer === this.playEvent.player && this.playEvent.resolver.canCancel) {
             buttons.push({ text: 'Cancel', arg: 'cancel' });
         }
@@ -25,18 +29,18 @@ class InitiateAbilityInterruptWindow extends TriggeredAbilityWindow {
         });
     }
 
-    getMinCostReduction() {
+    getMinCostReduction(): number {
         if(this.playEvent) {
             const context = this.playEvent.context;
             const alternatePools = context.player.getAlternateFatePools(this.playEvent.playType, context.source, context);
-            const alternatePoolTotal = alternatePools.reduce((total, pool) => total + pool.fate, 0);
+            const alternatePoolTotal = alternatePools.reduce((total: number, pool: any) => total + pool.fate, 0);
             const maxPlayerFate = context.player.checkRestrictions('spendFate', context) ? context.player.fate : 0;
             return Math.max(context.ability.getReducedCost(context) - maxPlayerFate - alternatePoolTotal, 0);
         }
         return 0;
     }
 
-    resolveAbility(context) {
+    resolveAbility(context: any) {
         if(this.playEvent) {
             this.playEvent.resolver.canCancel = false;
         }
@@ -44,8 +48,10 @@ class InitiateAbilityInterruptWindow extends TriggeredAbilityWindow {
     }
 }
 
-class InitiateAbilityEventWindow extends EventWindow {
-    openWindow(abilityType) {
+export default class InitiateAbilityEventWindow extends EventWindow {
+    eventsToExecute: Event[] = [];
+
+    openWindow(abilityType: AbilityTypes) {
         if(this.events.length && abilityType === AbilityTypes.Interrupt) {
             this.queueStep(new InitiateAbilityInterruptWindow(this.game, abilityType, this));
         } else {
@@ -73,5 +79,3 @@ class InitiateAbilityEventWindow extends EventWindow {
         this.eventsToExecute.forEach(event => this.game.emit(event.name, event));
     }
 }
-
-module.exports = InitiateAbilityEventWindow;

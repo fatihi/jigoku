@@ -1,9 +1,8 @@
-const { EffectValue } = require('./EffectValue');
+import { EffectValue } from './EffectValue';
+import { AbilityTypes, CardTypes, Locations, Phases, Stages } from '../Constants';
+import { MoveCardAction } from '../GameActions/MoveCardAction';
 
-const { AbilityTypes, CardTypes, Locations, Phases, Stages } = require('../Constants');
-const { MoveCardAction } = require('../GameActions/MoveCardAction');
-
-const checkRestrictions = {
+const checkRestrictions: Record<string, (context: any, effect: any, card?: any) => boolean> = {
     abilitiesTriggeredByOpponents: (context, effect) =>
         context.player === getApplyingPlayer(effect).opponent &&
         context.ability.isTriggeredAbility() &&
@@ -39,12 +38,12 @@ const checkRestrictions = {
             CardTypes.Role
         ].includes(context.source.type),
     ringEffects: (context) => context.source.type === 'ring',
-    cardAndRingEffects: (context) => checkRestrictions.cardEffects(context) || checkRestrictions.ringEffects(context),
+    cardAndRingEffects: (context) => checkRestrictions.cardEffects(context, null) || checkRestrictions.ringEffects(context, null),
     characters: (context) => context.source.type === CardTypes.Character,
     charactersWithNoFate: (context) => context.source.type === CardTypes.Character && context.source.getFate() === 0,
     copiesOfDiscardEvents: (context) =>
         context.source.type === CardTypes.Event &&
-        context.player.conflictDiscardPile.any((card) => card.name === context.source.name),
+        context.player.conflictDiscardPile.any((card: any) => card.name === context.source.name),
     copiesOfX: (context, effect) => context.source.name === effect.params,
     events: (context) => context.source.type === CardTypes.Event,
     eventsWithSameClan: (context, effect, card) =>
@@ -120,7 +119,7 @@ const checkRestrictions = {
     toHand: (context) => {
         let targetActions = context.ability.properties.target ? context.ability.properties.target.gameAction : [];
         let nestedActions = context.ability.gameAction
-            ? context.ability.gameAction.map((topAction) => topAction.properties.gameAction)
+            ? context.ability.gameAction.map((topAction: any) => topAction.properties.gameAction)
             : [];
 
         return targetActions.some(isMoveToHandAction) || nestedActions.some(isMoveToHandAction);
@@ -133,19 +132,24 @@ const checkRestrictions = {
     }
 };
 
-const getApplyingPlayer = (effect) => {
+const getApplyingPlayer = (effect: any) => {
     return effect.applyingPlayer || effect.context.player;
 };
 
-const isMoveToHandAction = (gameAction) =>
-    // @ts-ignorea
+const isMoveToHandAction = (gameAction: any) =>
+    // @ts-expect-error -- properties.destination exists on MoveCardAction but not on the base type
     gameAction instanceof MoveCardAction && gameAction.properties.destination === Locations.Hand;
 
 const leavePlayTypes = new Set(['discardFromPlay', 'sacrifice', 'returnToHand', 'returnToDeck', 'removeFromGame']);
 
-class Restriction extends EffectValue {
-    constructor(properties) {
-        super();
+class Restriction extends EffectValue<any> {
+    type: string;
+    restriction: any;
+    applyingPlayer: any;
+    params: any;
+
+    constructor(properties: any) {
+        super(undefined);
         if(typeof properties === 'string') {
             this.type = properties;
         } else {
@@ -161,7 +165,7 @@ class Restriction extends EffectValue {
         return this;
     }
 
-    isMatch(type, context, card) {
+    isMatch(type: string, context: any, card: any): boolean {
         if(this.type === 'leavePlay') {
             return leavePlayTypes.has(type) && this.checkCondition(context, card);
         }
@@ -169,16 +173,16 @@ class Restriction extends EffectValue {
         return (!this.type || this.type === type) && this.checkCondition(context, card);
     }
 
-    checkCondition(context, card) {
+    checkCondition(context: any, card: any): boolean {
         if(Array.isArray(this.restriction)) {
-            const vals = this.restriction.map((a) => this.checkRestriction(a, context, card));
-            return vals.every((a) => a);
+            const vals = this.restriction.map((a: any) => this.checkRestriction(a, context, card));
+            return vals.every((a: boolean) => a);
         }
 
         return this.checkRestriction(this.restriction, context, card);
     }
 
-    checkRestriction(restriction, context, card) {
+    checkRestriction(restriction: any, context: any, card: any): boolean {
         if(!restriction) {
             return true;
         } else if(!context) {
@@ -192,4 +196,4 @@ class Restriction extends EffectValue {
     }
 }
 
-module.exports = Restriction;
+export = Restriction;

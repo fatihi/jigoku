@@ -1,20 +1,25 @@
-const { EffectValue } = require('./EffectValue');
-const GainAbility = require('./GainAbility');
-const { AbilityTypes, Locations } = require('../Constants');
+import { EffectValue } from './EffectValue';
+import GainAbility from './GainAbility';
+import { AbilityTypes, Locations } from '../Constants';
 
-class GainAllAbilities extends EffectValue {
-    constructor(card) {
+export default class GainAllAbilities extends EffectValue<any> {
+    actions: GainAbility[];
+    reactions: GainAbility[];
+    persistentEffects: any[];
+    abilitiesForTargets: Record<string, { actions: any[]; reactions: any[] }>;
+
+    constructor(card: any) {
         super(card);
-        this.actions = card.abilities.actions.map((action) => new GainAbility(AbilityTypes.Action, action));
+        this.actions = card.abilities.actions.map((action: any) => new GainAbility(AbilityTypes.Action, action));
         //Need to ignore keyword reactions or we double up on the pride / courtesy / sincerity triggers
         this.reactions = card.abilities.reactions
-            .filter((a) => !a.isKeywordAbility())
-            .map((ability) => new GainAbility(ability.abilityType, ability));
-        this.persistentEffects = card.abilities.persistentEffects.map((effect) => Object.assign({}, effect));
+            .filter((a: any) => !a.isKeywordAbility())
+            .map((ability: any) => new GainAbility(ability.abilityType, ability));
+        this.persistentEffects = card.abilities.persistentEffects.map((effect: any) => Object.assign({}, effect));
         this.abilitiesForTargets = {};
     }
 
-    apply(target) {
+    apply(target: any) {
         this.abilitiesForTargets[target.uuid] = {
             actions: this.actions.map((value) => {
                 value.apply(target);
@@ -32,7 +37,7 @@ class GainAllAbilities extends EffectValue {
         }
     }
 
-    unapply(target) {
+    unapply(target: any) {
         for(const value of this.abilitiesForTargets[target.uuid].reactions) {
             value.unregisterEvents();
         }
@@ -45,23 +50,21 @@ class GainAllAbilities extends EffectValue {
         delete this.abilitiesForTargets[target.uuid];
     }
 
-    getActions(target) {
+    getActions(target: any): any[] {
         if(this.abilitiesForTargets[target.uuid]) {
             return this.abilitiesForTargets[target.uuid].actions;
         }
         return [];
     }
 
-    getReactions(target) {
+    getReactions(target: any): any[] {
         if(this.abilitiesForTargets[target.uuid]) {
             return this.abilitiesForTargets[target.uuid].reactions;
         }
         return [];
     }
 
-    getPersistentEffects() {
+    getPersistentEffects(): any[] {
         return this.persistentEffects;
     }
 }
-
-module.exports = GainAllAbilities;

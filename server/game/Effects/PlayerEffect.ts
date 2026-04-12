@@ -1,17 +1,19 @@
-const Effect = require('./Effect.js');
-const { Players } = require('../Constants');
+import Effect from './Effect';
+import { Players } from '../Constants';
+import type Game from '../game';
 
-class PlayerEffect extends Effect {
-    constructor(game, source, properties, effect) {
+export default class PlayerEffect extends Effect {
+    targetController: string;
+
+    constructor(game: Game, source: any, properties: any, effect: any) {
         super(game, source, properties, effect);
         this.targetController = properties.targetController || Players.Self;
         if(typeof this.match !== 'function') {
-            this.match = player => true; // eslint-disable-line no-unused-vars
+            this.match = (_player: any) => true;
         }
-
     }
 
-    isValidTarget(target) {
+    isValidTarget(target: any): boolean {
         if(this.targetController !== Players.Any && this.targetController !== Players.Self && this.targetController !== Players.Opponent && this.targetController !== target) {
             return false;
         }
@@ -24,9 +26,7 @@ class PlayerEffect extends Effect {
         return true;
     }
 
-    getTargets() {
-        return this.game.getPlayers().filter(player => this.match(player));
+    getTargets(): any[] {
+        return this.game.getPlayers().filter((player: any) => this.match(player));
     }
 }
-
-module.exports = PlayerEffect;

@@ -1,11 +1,23 @@
-const { BaseStepWithPipeline } = require('./BaseStepWithPipeline.js');
-const { SimpleStep } = require('./SimpleStep.js');
-const InitiateCardAbilityEvent = require('../Events/InitiateCardAbilityEvent');
-const InitiateAbilityEventWindow = require('../Events/InitiateAbilityEventWindow');
-const { Locations, Stages, CardTypes, EventNames } = require('../Constants');
+import { BaseStepWithPipeline } from './BaseStepWithPipeline';
+import { SimpleStep } from './SimpleStep';
+import InitiateCardAbilityEvent from '../Events/InitiateCardAbilityEvent';
+import InitiateAbilityEventWindow from '../Events/InitiateAbilityEventWindow';
+import { Locations, Stages, CardTypes, EventNames } from '../Constants';
+import type Game from '../game';
+import type { Event } from '../Events/Event';
 
 class AbilityResolver extends BaseStepWithPipeline {
-    constructor(game, context) {
+    context: any;
+    canCancel: boolean;
+    initiateAbility: boolean;
+    passPriority: boolean;
+    events: Event[];
+    provincesToRefill: any[];
+    targetResults: any;
+    costResults: any;
+    cancelled?: boolean;
+
+    constructor(game: Game, context: any) {
         super(game);
 
         this.context = context;
@@ -40,7 +52,7 @@ class AbilityResolver extends BaseStepWithPipeline {
             return;
         }
         let eventName = EventNames.OnAbilityResolverInitiated;
-        let eventProps = {
+        let eventProps: any = {
             context: this.context
         };
         if(this.context.ability.isCardAbility()) {
@@ -136,7 +148,7 @@ class AbilityResolver extends BaseStepWithPipeline {
         if(this.cancelled) {
             return;
         }
-        this.cancelled = this.costResults.events.some(event => event.getResolutionEvent().cancelled);
+        this.cancelled = this.costResults.events.some((event: Event) => event.getResolutionEvent().cancelled);
         if(this.cancelled) {
             this.game.addMessage('{0} attempted to use {1}, but did not successfully pay the required costs', this.context.player, this.context.source);
         }
@@ -222,4 +234,4 @@ class AbilityResolver extends BaseStepWithPipeline {
     }
 }
 
-module.exports = AbilityResolver;
+export = AbilityResolver;

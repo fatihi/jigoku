@@ -1,19 +1,18 @@
-const EventWindow = require('./EventWindow.js');
-const { AbilityTypes } = require('../Constants');
+import EventWindow from './EventWindow';
+import { AbilityTypes } from '../Constants';
+import type { Event } from './Event';
 
-class ThenEventWindow extends EventWindow {
-    openWindow(abilityType) {
+export default class ThenEventWindow extends EventWindow {
+    openWindow(abilityType: AbilityTypes) {
         if(abilityType !== AbilityTypes.ForcedReaction && abilityType !== AbilityTypes.Reaction && abilityType !== AbilityTypes.DuelReaction) {
             super.openWindow(abilityType);
         }
     }
 
     resetCurrentEventWindow() {
-        for(let event of this.events) {
+        for(const event of this.events) {
             this.previousEventWindow.addEvent(event);
         }
         super.resetCurrentEventWindow();
     }
 }
-
-module.exports = ThenEventWindow;

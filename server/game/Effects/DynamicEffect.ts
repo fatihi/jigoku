@@ -1,18 +1,22 @@
-const StaticEffect = require('./StaticEffect');
+import StaticEffect from './StaticEffect';
+import type { EffectNames } from '../Constants';
 
-class DynamicEffect extends StaticEffect {
-    constructor(type, calculate) {
-        super(type);
+export default class DynamicEffect extends StaticEffect {
+    values: Record<string, any>;
+    calculate: (target: any, context: any) => any;
+
+    constructor(type: EffectNames, calculate: (target: any, context: any) => any) {
+        super(type, undefined);
         this.values = {};
         this.calculate = calculate;
     }
 
-    apply(target) {
+    apply(target: any) {
         super.apply(target);
         this.recalculate(target);
     }
 
-    recalculate(target) {
+    recalculate(target?: any): boolean {
         let oldValue = this.getValue(target);
         let newValue = this.setValue(target, this.calculate(target, this.context));
         if(typeof oldValue === 'function' && typeof newValue === 'function') {
@@ -32,16 +36,14 @@ class DynamicEffect extends StaticEffect {
         return oldValue !== newValue;
     }
 
-    getValue(target) {
+    getValue(target?: any) {
         if(target) {
             return this.values[target.uuid];
         }
     }
 
-    setValue(target, value) {
+    setValue(target: any, value: any) {
         this.values[target.uuid] = value;
         return value;
     }
 }
-
-module.exports = DynamicEffect;

@@ -1,6 +1,6 @@
-const { EffectValue } = require('./EffectValue');
-const { CardTypes, EffectNames, Durations, AbilityTypes } = require('../Constants');
-const GainAbility = require('./GainAbility');
+import { EffectValue } from './EffectValue';
+import { CardTypes, EffectNames, Durations, AbilityTypes } from '../Constants';
+import GainAbility from './GainAbility';
 
 const binaryCardEffects = [
     EffectNames.Blank,
@@ -36,7 +36,7 @@ const ProvinceStrengthModifiers = [
     EffectNames.SetBaseProvinceStrength
 ];
 
-const hasDash = {
+const hasDash: Record<string, (card: any, type?: any) => boolean> = {
     modifyBaseMilitarySkillMultiplier: (card) => card.hasDash('military'),
     modifyBasePoliticalSkillMultiplier: (card) => card.hasDash('political'),
     modifyBothSkills: (card) => card.hasDash('military') && card.hasDash('political'),
@@ -53,32 +53,39 @@ const hasDash = {
     setPoliticalSkill: (card) => card.hasDash('political')
 };
 
-const conflictingEffects = {
+const conflictingEffects: Record<string, (target: any, value?: any) => any[]> = {
     modifyBaseMilitarySkillMultiplier: (card) =>
-        card.effects.filter((effect) => effect.type === EffectNames.SetBaseMilitarySkill),
+        card.effects.filter((effect: any) => effect.type === EffectNames.SetBaseMilitarySkill),
     modifyBasePoliticalSkillMultiplier: (card) =>
-        card.effects.filter((effect) => effect.type === EffectNames.SetBasePoliticalSkill),
-    modifyGlory: (card) => card.effects.filter((effect) => effect.type === EffectNames.SetGlory),
-    modifyMilitarySkill: (card) => card.effects.filter((effect) => effect.type === EffectNames.SetMilitarySkill),
+        card.effects.filter((effect: any) => effect.type === EffectNames.SetBasePoliticalSkill),
+    modifyGlory: (card) => card.effects.filter((effect: any) => effect.type === EffectNames.SetGlory),
+    modifyMilitarySkill: (card) => card.effects.filter((effect: any) => effect.type === EffectNames.SetMilitarySkill),
     modifyMilitarySkillMultiplier: (card) =>
-        card.effects.filter((effect) => effect.type === EffectNames.SetMilitarySkill),
-    modifyPoliticalSkill: (card) => card.effects.filter((effect) => effect.type === EffectNames.SetPoliticalSkill),
+        card.effects.filter((effect: any) => effect.type === EffectNames.SetMilitarySkill),
+    modifyPoliticalSkill: (card) => card.effects.filter((effect: any) => effect.type === EffectNames.SetPoliticalSkill),
     modifyPoliticalSkillMultiplier: (card) =>
-        card.effects.filter((effect) => effect.type === EffectNames.SetPoliticalSkill),
-    setBaseMilitarySkill: (card) => card.effects.filter((effect) => effect.type === EffectNames.SetMilitarySkill),
-    setBasePoliticalSkill: (card) => card.effects.filter((effect) => effect.type === EffectNames.SetPoliticalSkill),
+        card.effects.filter((effect: any) => effect.type === EffectNames.SetPoliticalSkill),
+    setBaseMilitarySkill: (card) => card.effects.filter((effect: any) => effect.type === EffectNames.SetMilitarySkill),
+    setBasePoliticalSkill: (card) => card.effects.filter((effect: any) => effect.type === EffectNames.SetPoliticalSkill),
     setMaxConflicts: (player, value) =>
         player.mostRecentEffect(EffectNames.SetMaxConflicts) === value
-            ? [player.effects.filter((effect) => effect.type === EffectNames.SetMaxConflicts).at(-1)]
+            ? [player.effects.filter((effect: any) => effect.type === EffectNames.SetMaxConflicts).at(-1)]
             : [],
     takeControl: (card, player) =>
         card.mostRecentEffect(EffectNames.TakeControl) === player
-            ? [card.effects.filter((effect) => effect.type === EffectNames.TakeControl).at(-1)]
+            ? [card.effects.filter((effect: any) => effect.type === EffectNames.TakeControl).at(-1)]
             : []
 };
 
 class StaticEffect {
-    constructor(type, value) {
+    type: EffectNames;
+    value: EffectValue<any>;
+    context: any;
+    duration: Durations | null;
+    copies: any[];
+    isConditional?: boolean;
+
+    constructor(type: EffectNames, value: any) {
         this.type = type;
         if(value instanceof EffectValue) {
             this.value = value;
@@ -91,7 +98,7 @@ class StaticEffect {
         this.copies = [];
     }
 
-    apply(target) {
+    apply(target: any) {
         target.addEffect(this);
         if(this.value instanceof GainAbility && this.value.abilityType === AbilityTypes.Persistent) {
             const copy = this.value.getCopy();
@@ -102,7 +109,7 @@ class StaticEffect {
         }
     }
 
-    unapply(target) {
+    unapply(target: any) {
         target.removeEffect(this);
         this.value.unapply(target);
         this.copies.forEach((a) => a.unapply(target));
@@ -117,42 +124,42 @@ class StaticEffect {
         return this.value.recalculate();
     }
 
-    setContext(context) {
+    setContext(context: any) {
         this.context = context;
         this.value.setContext(context);
     }
 
-    canBeApplied(target) {
+    canBeApplied(target: any): boolean {
         if(target.facedown && target.type !== CardTypes.Province) {
             return false;
         }
         return !hasDash[this.type] || !hasDash[this.type](target, this.value);
     }
 
-    isMilitaryModifier() {
+    isMilitaryModifier(): boolean {
         return MilitaryModifiers.includes(this.type);
     }
 
-    isPoliticalModifier() {
+    isPoliticalModifier(): boolean {
         return PoliticalModifiers.includes(this.type);
     }
 
-    isSkillModifier() {
+    isSkillModifier(): boolean {
         return this.isMilitaryModifier() || this.isPoliticalModifier();
     }
 
-    isProvinceStrengthModifier() {
+    isProvinceStrengthModifier(): boolean {
         return ProvinceStrengthModifiers.includes(this.type);
     }
 
-    checkConflictingEffects(type, target) {
+    checkConflictingEffects(type: EffectNames, target: any): boolean {
         if(binaryCardEffects.includes(type)) {
-            let matchingEffects = target.effects.filter((effect) => effect.type === type);
-            return matchingEffects.every((effect) => this.hasLongerDuration(effect) || effect.isConditional);
+            let matchingEffects = target.effects.filter((effect: any) => effect.type === type);
+            return matchingEffects.every((effect: any) => this.hasLongerDuration(effect) || effect.isConditional);
         }
         if(conflictingEffects[type]) {
             let matchingEffects = conflictingEffects[type](target, this.getValue());
-            return matchingEffects.every((effect) => this.hasLongerDuration(effect) || effect.isConditional);
+            return matchingEffects.every((effect: any) => this.hasLongerDuration(effect) || effect.isConditional);
         }
         if(type === EffectNames.ModifyBothSkills) {
             return (
@@ -175,14 +182,14 @@ class StaticEffect {
         return true;
     }
 
-    hasLongerDuration(effect) {
+    hasLongerDuration(effect: any): boolean {
         let durations = [
             Durations.UntilEndOfDuel,
             Durations.UntilEndOfConflict,
             Durations.UntilEndOfPhase,
             Durations.UntilEndOfRound
         ];
-        return durations.indexOf(this.duration) > durations.indexOf(effect.duration);
+        return durations.indexOf(this.duration as Durations) > durations.indexOf(effect.duration);
     }
 
     getDebugInfo() {
@@ -193,4 +200,4 @@ class StaticEffect {
     }
 }
 
-module.exports = StaticEffect;
+export = StaticEffect;

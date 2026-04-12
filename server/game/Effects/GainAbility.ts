@@ -1,10 +1,17 @@
-const { EffectValue } = require('./EffectValue');
-const { AbilityTypes, Locations } = require('../Constants');
+import { EffectValue } from './EffectValue';
+import { AbilityTypes, Locations } from '../Constants';
 
-class GainAbility extends EffectValue {
-    constructor(abilityType, ability) {
+export default class GainAbility extends EffectValue<any> {
+    abilityType: string;
+    createCopies: boolean;
+    forCopying: any;
+    grantedAbilityLimits: Record<string, any>;
+    properties: any;
+
+    constructor(abilityType: string, ability: any) {
         super(true);
         this.abilityType = abilityType;
+        this.createCopies = false;
         if(ability.createCopies) {
             this.createCopies = true;
             this.forCopying = {};
@@ -13,7 +20,7 @@ class GainAbility extends EffectValue {
         }
         this.grantedAbilityLimits = {};
         if(ability.properties) {
-            let newProps = {
+            let newProps: any = {
                 printedAbility: false,
                 abilityIdentifier: ability.abilityIdentifier,
                 origin: ability.card
@@ -36,7 +43,7 @@ class GainAbility extends EffectValue {
         }
     }
 
-    getCopy() {
+    getCopy(): GainAbility {
         if(this.createCopies) {
             const ability = new GainAbility(this.forCopying.abilityType, this.forCopying.ability);
             ability.context = this.context;
@@ -49,10 +56,10 @@ class GainAbility extends EffectValue {
         this.grantedAbilityLimits = {};
     }
 
-    apply(target) {
+    apply(target: any) {
         let properties = Object.assign({ origin: this.context.source }, this.properties);
         if(this.abilityType === AbilityTypes.Persistent) {
-            const activeLocations = {
+            const activeLocations: Record<string, string[]> = {
                 'play area': [Locations.PlayArea],
                 province: this.context.game.getProvinceArray()
             };
@@ -75,7 +82,7 @@ class GainAbility extends EffectValue {
         this.grantedAbilityLimits[target.uuid].currentUser = target.uuid;
     }
 
-    unapply(target) {
+    unapply(target: any) {
         if(this.grantedAbilityLimits[target.uuid]) {
             this.grantedAbilityLimits[target.uuid].currentUser = null;
         }
@@ -86,7 +93,7 @@ class GainAbility extends EffectValue {
                 AbilityTypes.Interrupt,
                 AbilityTypes.Reaction,
                 AbilityTypes.WouldInterrupt
-            ].includes(this.abilityType)
+            ].includes(this.abilityType as AbilityTypes)
         ) {
             this.value.unregisterEvents();
         } else if(this.abilityType === AbilityTypes.Persistent && this.value.ref) {
@@ -95,5 +102,3 @@ class GainAbility extends EffectValue {
         }
     }
 }
-
-module.exports = GainAbility;

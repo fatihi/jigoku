@@ -1,4 +1,5 @@
-const { Locations, Durations } = require('../Constants');
+import { Locations, Durations } from '../Constants';
+import type Game from '../game';
 
 /**
  * Represents a card based effect applied to one or more targets.
@@ -27,7 +28,22 @@ const { Locations, Durations } = require('../Constants');
  * effect           - object representing the effect to be applied.
  */
 class Effect {
-    constructor(game, source, properties, effect) {
+    game: Game;
+    source: any;
+    match: any;
+    duration: Durations;
+    until: Record<string, any>;
+    condition: (context: any) => boolean;
+    location: string;
+    canChangeZoneOnce: boolean;
+    canChangeZoneNTimes: number;
+    effect: any;
+    ability: any;
+    targets: any[];
+    context: any;
+    endingMessage: string | undefined;
+
+    constructor(game: Game, source: any, properties: any, effect: any) {
         this.game = game;
         this.source = source;
         this.match = properties.match || (() => true);
@@ -55,33 +71,33 @@ class Effect {
         this.effect.setContext(this.context);
     }
 
-    isValidTarget(target) { // eslint-disable-line no-unused-vars
+    isValidTarget(_target: any): boolean {
         return true;
     }
 
-    getDefaultTarget(context) { // eslint-disable-line no-unused-vars
+    getDefaultTarget(_context: any): any {
         return null;
     }
 
-    getTargets() {
+    getTargets(): any[] {
         return [];
     }
 
-    addTarget(target) {
+    addTarget(target: any) {
         this.targets.push(target);
         this.effect.apply(target);
     }
 
-    removeTarget(target) {
+    removeTarget(target: any) {
         this.removeTargets([target]);
     }
 
-    removeTargets(targets) {
+    removeTargets(targets: any[]) {
         targets.forEach(target => this.effect.unapply(target));
         this.targets = this.targets.filter(t => !targets.includes(t));
     }
 
-    hasTarget(target) {
+    hasTarget(target: any): boolean {
         return this.targets.includes(target);
     }
 
@@ -90,15 +106,15 @@ class Effect {
         this.targets = [];
     }
 
-    isEffectActive() {
+    isEffectActive(): boolean {
         if(this.duration !== Durations.Persistent) {
             return true;
         }
-        let effectOnSource = this.source.persistentEffects.some(effect => effect.ref && effect.ref.includes(this));
+        let effectOnSource = this.source.persistentEffects.some((effect: any) => effect.ref && effect.ref.includes(this));
         return !this.source.facedown && effectOnSource;
     }
 
-    checkCondition(stateChanged) {
+    checkCondition(stateChanged: boolean): boolean {
         if(!this.condition(this.context) || !this.isEffectActive()) {
             stateChanged = this.targets.length > 0 || stateChanged;
             this.cancel();
@@ -140,4 +156,4 @@ class Effect {
     }
 }
 
-module.exports = Effect;
+export = Effect;
