@@ -1415,6 +1415,7 @@ class Game extends EventEmitter {
             parts.push(player.provinceTwo.map((c: any) => c.uuid).join(','));
             parts.push(player.provinceThree.map((c: any) => c.uuid).join(','));
             parts.push(player.provinceFour.map((c: any) => c.uuid).join(','));
+            parts.push(player.stronghold ? player.stronghold.childCards.map((c: any) => c.uuid).join(',') : '');
         }
         return parts.join('|');
     }
@@ -1447,7 +1448,8 @@ class Game extends EventEmitter {
                     two: player.provinceTwo.map(cardSummary),
                     three: player.provinceThree.map(cardSummary),
                     four: player.provinceFour.map(cardSummary)
-                }
+                },
+                strongholdChildren: player.stronghold ? player.stronghold.childCards.map(cardSummary) : []
             };
         }
         return info;
