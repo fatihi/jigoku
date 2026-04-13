@@ -1,0 +1,26 @@
+import DrawCard from '../../drawcard';
+import AbilityDsl from '../../abilitydsl';
+import { AbilityTypes } from '../../Constants';
+
+class WayWithWords extends DrawCard {
+    static id = 'way-with-words';
+
+    setupCardAbilities() {
+        this.whileAttached({
+            effect: AbilityDsl.effects.gainAbility(AbilityTypes.Reaction, {
+                title: 'Take 1 honor',
+                when: {
+                    afterConflict: (event, context) =>
+                        context.source.isParticipating() &&
+                        event.conflict.winner === context.source.controller &&
+                        context.player.opponent &&
+                        event.conflict.conflictType === 'political'
+                },
+                gameAction: AbilityDsl.actions.takeHonor()
+            })
+        });
+    }
+}
+
+
+export default WayWithWords;

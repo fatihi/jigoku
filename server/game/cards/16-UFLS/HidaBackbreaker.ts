@@ -1,0 +1,35 @@
+import DrawCard from '../../drawcard';
+import { CardTypes, Players } from '../../Constants';
+import AbilityDsl from '../../abilitydsl';
+
+class HidaBackbreaker extends DrawCard {
+    static id = 'hida-backbreaker';
+
+    setupCardAbilities() {
+        this.reaction({
+            title: 'Dishonor a character',
+            when: {
+                afterConflict: (event, context) => event.conflict.winner === context.source.controller &&
+                                                   context.source.isParticipating() && context.game.isDuringConflict('military')
+            },
+            target: {
+                activePromptTitle: 'Choose a character to dishonor',
+                cardType: CardTypes.Character,
+                controller: Players.Opponent,
+                cardCondition: card => card.isParticipating(),
+                gameAction: AbilityDsl.actions.dishonor()
+            }
+        });
+    }
+
+    allowAttachment(attachment) {
+        if(attachment.controller === this.controller.opponent) {
+            return false;
+        }
+
+        return super.allowAttachment(attachment);
+    }
+}
+
+
+export default HidaBackbreaker;

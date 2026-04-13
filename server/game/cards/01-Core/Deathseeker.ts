@@ -1,0 +1,34 @@
+import DrawCard from '../../drawcard';
+import { Players, CardTypes } from '../../Constants';
+
+class Deathseeker extends DrawCard {
+    static id = 'deathseeker';
+
+    setupCardAbilities(ability) {
+        // TODO: RemoveFateOrDiscard action?
+        this.reaction({
+            title: 'Remove fate/discard character',
+            when: {
+                afterConflict: (event, context) => event.conflict.loser === context.player && context.source.isAttacking()
+            },
+            cost: ability.costs.sacrificeSelf(),
+            target: {
+                cardType: CardTypes.Character,
+                controller: Players.Opponent,
+                cardCondition: (card, context) => (card.getFate() > 0 ? card.allowGameAction('removeFate', context) : card.allowGameAction('discardFromPlay', context))
+            },
+            effect: '{1} {0}',
+            effectArgs: context => context.target.getFate() > 0 ? 'remove 1 fate from' : 'discard',
+            handler: context => {
+                if(context.target.getFate() === 0) {
+                    this.game.applyGameAction(context, { discardFromPlay: context.target });
+                } else {
+                    this.game.applyGameAction(context, { removeFate: context.target });
+                }
+            }
+        });
+    }
+}
+
+
+export default Deathseeker;

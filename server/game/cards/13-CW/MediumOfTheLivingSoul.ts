@@ -1,0 +1,36 @@
+import DrawCard from '../../drawcard';
+import AbilityDsl from '../../abilitydsl';
+import { CardTypes, Players, AbilityTypes } from '../../Constants';
+
+class MediumOfTheLivingSoul extends DrawCard {
+    static id = 'medium-of-the-living-soul';
+
+    setupCardAbilities() {
+        this.action({
+            title: 'Grant an ability to resolve ring effects',
+            condition: (context) => context.game.isDuringConflict(),
+            target: {
+                cardType: CardTypes.Character,
+                controller: Players.Any,
+                cardCondition: (card) => card.isParticipating(),
+                gameAction: AbilityDsl.actions.cardLastingEffect(() => ({
+                    effect: AbilityDsl.effects.gainAbility(AbilityTypes.Reaction, {
+                        title: 'Resolve the Ring Effect',
+                        when: {
+                            onResolveRingElement: (event, context) => {
+                                let val = event.player === context.player && context.source.isParticipating();
+                                return val;
+                            }
+                        },
+                        cost: AbilityDsl.costs.removeFateFromSelf(),
+                        gameAction: AbilityDsl.actions.resolveRingEffect((context) => ({ target: context.event.ring }))
+                    })
+                }))
+            },
+            effect: 'give {0} the ability to resolve a ring effect'
+        });
+    }
+}
+
+
+export default MediumOfTheLivingSoul;

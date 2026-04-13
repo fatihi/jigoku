@@ -12,11 +12,13 @@ import { logger } from '../logger';
 import type PendingGame from '../pendinggame';
 import Socket from '../socket';
 import { detectBinary } from '../util';
+import { SendGameStateProfiler } from './SendGameStateProfiler';
 import { WsSocket } from './WsSocket';
 import * as env from '../env.js';
 
 export class GameServer {
     private games = new Map<string, Game>();
+    private userGameMap = new Map<string, Game>();
     private abandonTimers = new Map<string, ReturnType<typeof setTimeout>>();
     private protocol = 'https';
     private host = env.domain;
@@ -25,6 +27,7 @@ export class GameServer {
     private titleCardData: any;
     private shortCardData: any;
     private lastSentMessageCount = new Map<string, number>();
+    private profiler = new SendGameStateProfiler();
 
     constructor() {
         let privateKey: undefined | string;
@@ -91,13 +94,13 @@ export class GameServer {
         for(const game of this.games.values()) {
             const players = [];
             for(const player of Object.values<any>(game.playersAndSpectators)) {
-                return {
+                players.push({
                     name: player.name,
                     left: player.left,
                     disconnected: player.disconnected,
                     id: player.id,
                     spectator: game.isSpectator(player)
-                };
+                });
             }
             games.push({
                 name: game.name,
@@ -157,36 +160,67 @@ export class GameServer {
     }
 
     findGameForUser(username: string): undefined | Game {
-        for(const game of this.games.values()) {
-            const player = game.playersAndSpectators[username];
-            if(player && !player.left) {
-                return game;
+        return this.userGameMap.get(username);
+    }
+
+    private registerUsersForGame(game: Game): void {
+        for(const username of Object.keys(game.playersAndSpectators)) {
+            this.userGameMap.set(username, game);
+        }
+    }
+
+    private unregisterUsersForGame(game: Game): void {
+        for(const username of Object.keys(game.playersAndSpectators)) {
+            if(this.userGameMap.get(username) === game) {
+                this.userGameMap.delete(username);
             }
         }
     }
 
     sendGameState(game: Game): void {
+        const profile = this.profiler.enabled;
+        const t0 = profile ? this.profiler.now() : 0n;
+
         const sharedState = game.getSharedState();
+        const t1 = profile ? this.profiler.now() : 0n;
+
         const allMessages = game.gameChat.messages;
         const totalMessages = allMessages.length;
         let spectatorState: any = null;
 
-        // Record hidden info (hands + facedown provinces) for replay enrichment
+        // Record hidden info (hands + facedown provinces) for replay enrichment — only when changed
         if(game.started) {
-            game.hiddenInfoLog.push(game.getHiddenInfo());
+            game.recordHiddenInfoIfChanged();
         }
+        const t2 = profile ? this.profiler.now() : 0n;
+
+        let perViewerNs = 0n;
+        let spectatorNs = 0n;
+        let sendNs = 0n;
+        let playerCount = 0;
+        let spectatorCount = 0;
 
         for(const player of Object.values(game.getPlayersAndSpectators()) as any[]) {
             if(player.socket && !player.left && !player.disconnected) {
                 let state: any;
                 if(game.isSpectator(player)) {
+                    spectatorCount++;
                     // All spectators see the same game view — compute once
                     if(!spectatorState) {
+                        const s0 = profile ? this.profiler.now() : 0n;
                         spectatorState = game.getState(player.name, sharedState);
+                        if(profile) {
+                            spectatorNs += this.profiler.now() - s0;
+                        }
                     }
                     state = spectatorState;
                 } else {
+                    playerCount++;
+                    const p0 = profile ? this.profiler.now() : 0n;
                     state = game.getState(player.name, sharedState);
+                    if(profile) {
+                        perViewerNs += this.profiler.now() - p0;
+                    }
                 }
 
                 // Send only new messages since last send
@@ -201,8 +235,26 @@ export class GameServer {
                     newMessages: lastSent > 0
                 });
 
+                const w0 = profile ? this.profiler.now() : 0n;
                 player.socket.send('gamestate', stateWithMessages);
+                if(profile) {
+                    sendNs += this.profiler.now() - w0;
+                }
             }
+        }
+
+        if(profile) {
+            const total = this.profiler.now() - t0;
+            this.profiler.record({
+                sharedState: t1 - t0,
+                hiddenInfo: t2 - t1,
+                perViewer: perViewerNs,
+                spectator: spectatorNs,
+                send: sendNs,
+                total,
+                players: playerCount,
+                spectators: spectatorCount
+            });
         }
     }
 
@@ -213,6 +265,7 @@ export class GameServer {
                 player.socket.leaveChannel(game.id);
             }
         }
+        this.unregisterUsersForGame(game);
         this.games.delete(game.id);
         this.wsSocket.send('GAMECLOSED', { game: game.id });
     }
@@ -287,6 +340,7 @@ export class GameServer {
         logger.info(`Starting game ${pendingGame.id} (${playerNames}), total games: ${this.games.size + 1}`);
         const game = new Game(pendingGame as any, { router: this, shortCardData: this.shortCardData });
         this.games.set(pendingGame.id, game);
+        this.registerUsersForGame(game);
 
         game.started = true;
         for(const player of Object.values<Player>(pendingGame.players)) {
@@ -303,6 +357,7 @@ export class GameServer {
         }
 
         game.watch('TBA', user);
+        this.userGameMap.set(user.username, game);
 
         this.sendGameState(game);
     }
@@ -329,9 +384,11 @@ export class GameServer {
         }
 
         game.failedConnect(username);
+        this.userGameMap.delete(username);
 
         if(game.isEmpty()) {
             this.cancelAbandonTimer(game.id);
+            this.unregisterUsersForGame(game);
             this.games.delete(game.id);
             this.wsSocket.send('GAMECLOSED', { game: game.id });
         } else if(game.allPlayersGone()) {
@@ -418,12 +475,14 @@ export class GameServer {
 
         if(game.isEmpty()) {
             this.cancelAbandonTimer(game.id);
+            this.unregisterUsersForGame(game);
             this.games.delete(game.id);
 
             this.wsSocket.send('GAMECLOSED', { game: game.id });
         } else if(!isSpectator && game.allPlayersGone()) {
             this.startAbandonTimer(game);
         } else if(isSpectator) {
+            this.userGameMap.delete(socket.user.username);
             this.wsSocket.send('PLAYERLEFT', {
                 gameId: game.id,
                 game: game.getSaveState(),
@@ -444,6 +503,7 @@ export class GameServer {
         const isSpectator = game.isSpectator(game.playersAndSpectators[socket.user.username]);
 
         game.leave(socket.user.username);
+        this.userGameMap.delete(socket.user.username);
 
         this.wsSocket.send('PLAYERLEFT', {
             gameId: game.id,
@@ -457,6 +517,7 @@ export class GameServer {
 
         if(game.isEmpty()) {
             this.cancelAbandonTimer(game.id);
+            this.unregisterUsersForGame(game);
             this.games.delete(game.id);
 
             this.wsSocket.send('GAMECLOSED', { game: game.id });
@@ -466,6 +527,28 @@ export class GameServer {
 
         this.sendGameState(game);
     }
+
+    private static readonly ALLOWED_GAME_COMMANDS = new Set([
+        'cardClicked',
+        'changeStat',
+        'chat',
+        'concede',
+        'drop',
+        'facedownCardClicked',
+        'menuButton',
+        'menuItemClick',
+        'ringClicked',
+        'ringMenuItemClick',
+        'selectDeck',
+        'showConflictDeck',
+        'showDynastyDeck',
+        'shuffleConflictDeck',
+        'shuffleDynastyDeck',
+        'toggleManualMode',
+        'toggleOptionSetting',
+        'togglePromptedActionWindow',
+        'toggleTimerSetting'
+    ]);
 
     onGameMessage(socket, command, ...args) {
         const game = this.findGameForUser(socket.user.username);
@@ -478,7 +561,8 @@ export class GameServer {
             return this.onLeaveGame(socket);
         }
 
-        if(!game[command] || typeof game[command] !== 'function') {
+        if(!GameServer.ALLOWED_GAME_COMMANDS.has(command)) {
+            logger.info(`Rejected unknown game command '${command}' from ${socket.user.username}`);
             return;
         }
 

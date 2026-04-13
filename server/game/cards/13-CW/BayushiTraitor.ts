@@ -1,0 +1,33 @@
+import DrawCard from '../../drawcard';
+import { Locations } from '../../Constants';
+import AbilityDsl from '../../abilitydsl';
+
+class BayushiTraitor extends DrawCard {
+    static id = 'bayushi-traitor';
+
+    setupCardAbilities() {
+        this.persistentEffect({
+            location: Locations.Any,
+            condition: context => context.player.opponent && context.source.controller !== context.source.owner,
+            effect: [
+                AbilityDsl.effects.cannotParticipateAsAttacker(),
+                AbilityDsl.effects.cannotParticipateAsDefender()
+            ]
+        });
+
+        this.persistentEffect({
+            location: Locations.Any,
+            targetLocation: Locations.Any,
+            effect: AbilityDsl.effects.cardCannot('putIntoConflict')
+        });
+
+        this.persistentEffect({
+            location: Locations.Any,
+            targetLocation: Locations.Any,
+            effect: AbilityDsl.effects.entersPlayForOpponent()
+        });
+    }
+}
+
+
+export default BayushiTraitor;

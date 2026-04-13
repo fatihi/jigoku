@@ -1,0 +1,30 @@
+import DrawCard from '../../drawcard';
+import AbilityDsl from '../../abilitydsl';
+import { ConflictTypes, Locations } from '../../Constants';
+
+class CallousAshigaru extends DrawCard {
+    static id = 'callous-ashigaru';
+
+    setupCardAbilities() {
+        this.attachmentConditions({
+            unique: true
+        });
+
+        this.reaction({
+            title: 'Discard cards from provinces',
+            when: {
+                onBreakProvince: (event, context) => event.conflict.conflictType === ConflictTypes.Military &&
+                    context.source.parent && context.source.parent.isAttacking()
+            },
+            gameAction: AbilityDsl.actions.discardCard(context => ({
+                target: context.player.opponent ?
+                    context.player.opponent.getDynastyCardsInProvince(Locations.Provinces) :
+                    []
+            }))
+        });
+    }
+}
+
+
+export default CallousAshigaru;
+

@@ -1,5 +1,5 @@
 const _ = require('underscore');
-const SelectCardPrompt = require('../../../build/server/game/gamesteps/selectcardprompt.js');
+const { default: SelectCardPrompt } = require('../../../build/server/game/gamesteps/selectcardprompt.js');
 
 describe('the SelectCardPrompt', function() {
     function createCardSpy(properties = {}) {

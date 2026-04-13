@@ -1,0 +1,22 @@
+import DrawCard from '../../drawcard';
+
+class UnmatchedExpertise extends DrawCard {
+    static id = 'unmatched-expertise';
+
+    setupCardAbilities(ability) {
+        this.whileAttached({
+            effect: ability.effects.cardCannot('receiveDishonorToken')
+        });
+        this.forcedReaction({
+            title: 'Removed after attached character loses a conflict',
+            when: {
+                afterConflict: (event, context) => context.source.parent && context.source.parent.isParticipating() &&
+                                                   event.conflict.loser === context.source.parent.controller
+            },
+            gameAction: ability.actions.discardFromPlay()
+        });
+    }
+}
+
+
+export default UnmatchedExpertise;

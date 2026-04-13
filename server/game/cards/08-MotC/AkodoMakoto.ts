@@ -1,0 +1,33 @@
+import DrawCard from '../../drawcard';
+import { Players, CardTypes } from '../../Constants';
+import AbilityDsl from '../../abilitydsl';
+
+class AkodoMakoto extends DrawCard {
+    static id = 'akodo-makoto';
+
+    setupCardAbilities() {
+        this.reaction({
+            title: 'Remove fate/discard character',
+            when: {
+                afterConflict: (event, context) => {
+                    return event.conflict.winner === context.source.controller && context.source.isParticipating();
+                }
+            },
+            target: {
+                cardType: CardTypes.Character,
+                controller: Players.Any,
+                cardCondition: (card) => {
+                    return card.hasTrait('courtier') && card.isParticipating();
+                },
+                gameAction: AbilityDsl.actions.conditional({
+                    condition: context => context.target.getFate() > 0,
+                    trueGameAction: AbilityDsl.actions.removeFate(),
+                    falseGameAction: AbilityDsl.actions.discardFromPlay()
+                })
+            }
+        });
+    }
+}
+
+
+export default AkodoMakoto;

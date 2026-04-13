@@ -1,0 +1,39 @@
+import DrawCard from '../../../drawcard';
+import { Locations, Players, TargetModes } from '../../../Constants';
+import AbilityDsl from '../../../abilitydsl';
+
+class DragonflyMediator extends DrawCard {
+    static id = 'dragonfly-mediator';
+
+    setupCardAbilities() {
+        this.action({
+            title: 'Have each player reveal cards from their hand',
+            targets: {
+                myCard: {
+                    activePromptTitle: 'Choose a card to reveal',
+                    location: Locations.Hand,
+                    controller: Players.Self,
+                    gameAction: AbilityDsl.actions.lookAt(context => ({
+                        message: '{0} sees {1} from {2}',
+                        messageArgs: cards => [context.source, cards, context.player]
+                    }))
+                },
+                oppCard: {
+                    activePromptTitle: 'Choose three cards to reveal',
+                    mode: TargetModes.ExactlyVariable,
+                    numCardsFunc: context => Math.min(3, context.player.opponent.hand.size()),
+                    player: Players.Opponent,
+                    location: Locations.Hand,
+                    controller: Players.Opponent,
+                    gameAction: AbilityDsl.actions.lookAt(context => ({
+                        message: '{0} sees {1} from {2}',
+                        messageArgs: cards => [context.source, cards, context.player.opponent]
+                    }))
+                }
+            },
+            effect: 'have each player reveal cards from their hand'
+        });
+    }
+}
+
+export default DragonflyMediator;

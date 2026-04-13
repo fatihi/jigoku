@@ -1,0 +1,21 @@
+import DrawCard from '../../drawcard';
+import AbilityDsl from '../../abilitydsl';
+import { CardTypes } from '../../Constants';
+
+class ForwardGarrison extends DrawCard {
+    static id = 'forward-garrison';
+
+    setupCardAbilities() {
+        this.persistentEffect({
+            condition: context => context.game.isTraitInPlay('battlefield'),
+            match: (card, context) => card.type === CardTypes.Character && card.controller === context.player,
+            effect: AbilityDsl.effects.cardCannot({
+                cannot: 'removeFate',
+                restricts: 'opponentsCardAndRingEffects'
+            })
+        });
+    }
+}
+
+
+export default ForwardGarrison;

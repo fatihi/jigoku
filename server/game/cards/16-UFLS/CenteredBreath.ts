@@ -1,0 +1,34 @@
+import DrawCard from '../../drawcard';
+import { Durations, Players, CardTypes } from '../../Constants';
+import AbilityDsl from '../../abilitydsl';
+
+class CenteredBreath extends DrawCard {
+    static id = 'centered-breath';
+
+    setupCardAbilities() {
+        this.action({
+            title: 'Add an additional ability use to a monk',
+            target: {
+                cardType: CardTypes.Character,
+                controller: Players.Any,
+                cardCondition: card => card.hasTrait('monk') && card.isParticipating(),
+                gameAction: AbilityDsl.actions.sequential([
+                    AbilityDsl.actions.cardLastingEffect({
+                        duration: Durations.UntilEndOfRound,
+                        effect: AbilityDsl.effects.increaseLimitOnPrintedAbilities()
+                    }),
+                    AbilityDsl.actions.playerLastingEffect(context => ({
+                        targetController: context.player,
+                        duration: Durations.UntilPassPriority,
+                        effect: context.player.isKihoPlayedThisConflict(context, this) ? AbilityDsl.effects.additionalAction() : []
+                    }))
+                ])
+            },
+            effect: 'add an additional use to each of {0}\'s printed abilities{1}',
+            effectArgs: context => [context.player.isKihoPlayedThisConflict(context, this) ? ' and take an additional action' : '']
+        });
+    }
+}
+
+
+export default CenteredBreath;
