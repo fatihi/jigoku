@@ -18,7 +18,6 @@ class YoungRumormonger extends DrawCard {
                     card !== context.event.card && card.controller === context.event.card.controller,
                 gameAction: AbilityDsl.actions.cancel((context) => ({
                     replacementGameAction:
-                        // @ts-ignore
                         context.event.name === EventNames.OnCardHonored
                             ? AbilityDsl.actions.honor()
                             : AbilityDsl.actions.dishonor()

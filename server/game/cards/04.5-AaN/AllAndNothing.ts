@@ -18,7 +18,6 @@ class AllAndNothing extends DrawCard {
                     context.event.physicalRing ? ring !== context.event.physicalRing : ring.element !== 'void',
                 gameAction: AbilityDsl.actions.cancel((context) => ({
                     replacementGameAction: AbilityDsl.actions.resolveRingEffect({
-                        // @ts-ignore
                         optional: context.event.optional,
                         physicalRing: context.ring
                     })

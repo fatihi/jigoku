@@ -19,7 +19,6 @@ class MotoStables extends DrawCard {
             effectArgs: (context) => [context.event.card, 'military'],
             gameAction: AbilityDsl.actions.cardLastingEffect((context) => ({
                 duration: Durations.UntilEndOfConflict,
-                // @ts-ignore
                 target: context.event.card,
                 effect: AbilityDsl.effects.modifyMilitarySkill(2)
             }))

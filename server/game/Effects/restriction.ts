@@ -160,7 +160,6 @@ class Restriction extends EffectValue<any> {
         }
     }
 
-    // @ts-ignore
     getValue() {
         return this;
     }

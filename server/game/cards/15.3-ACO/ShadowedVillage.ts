@@ -20,7 +20,6 @@ class ShadowedVillage extends DrawCard {
             effectArgs: (context) => (context.event.origin.isDishonored ? ['2', 's'] : ['a', '']),
             gameAction: AbilityDsl.actions.draw((context) => ({
                 target: context.player,
-                // @ts-ignore
                 amount: context.event.origin.isDishonored ? 2 : 1
             }))
         });

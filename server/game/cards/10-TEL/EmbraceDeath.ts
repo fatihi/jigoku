@@ -23,7 +23,6 @@ class EmbraceDeath extends DrawCard {
                 controller: Players.Opponent
             },
             gameAction: AbilityDsl.actions.conditional({
-                // @ts-ignore
                 condition: (context) => context.target.getFate() > 0,
                 trueGameAction: AbilityDsl.actions.removeFate((context) => ({
                     target: context.target

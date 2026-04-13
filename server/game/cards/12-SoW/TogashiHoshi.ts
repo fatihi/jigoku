@@ -23,7 +23,6 @@ class TogashiHoshi extends DrawCard {
                 }),
                 gameAction: AbilityDsl.actions.multiple([
                     AbilityDsl.actions.detach(),
-                    // @ts-ignore
                     AbilityDsl.actions.cardLastingEffect({ duration: Durations.Custom })
                 ])
             })

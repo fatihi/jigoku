@@ -23,7 +23,6 @@ class MediumOfTheLivingSoul extends DrawCard {
                             }
                         },
                         cost: AbilityDsl.costs.removeFateFromSelf(),
-                        // @ts-ignore
                         gameAction: AbilityDsl.actions.resolveRingEffect((context) => ({ target: context.event.ring }))
                     })
                 }))

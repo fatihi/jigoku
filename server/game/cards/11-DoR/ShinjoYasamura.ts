@@ -17,7 +17,6 @@ class ShinjoYasamura extends DrawCard {
             effect: 'prevent {1} from defending this phase',
             effectArgs: (context) => context.event.context.target,
             gameAction: AbilityDsl.actions.cardLastingEffect((context) => ({
-                // @ts-ignore
                 target: context.event.context.target,
                 duration: Durations.UntilEndOfPhase,
                 effect: AbilityDsl.effects.cardCannot('declareAsDefender')

@@ -15,7 +15,6 @@ class TogashiGaijutsu extends DrawCard {
                     event.card.hasTrait('tattoo') &&
                     event.card.controller === context.player
             },
-            // @ts-ignore
             gameAction: AbilityDsl.actions.ready((context) => ({ target: context.event.card.parent }))
         });
     }

@@ -21,7 +21,6 @@ class AdornedTemple extends DrawCard {
             effectArgs: (context) => (context.event.recipient.isOrdinary() ? ['2', 's'] : ['a', '']),
             gameAction: AbilityDsl.actions.draw((context) => ({
                 target: context.player,
-                // @ts-ignore
                 amount: context.event.recipient.isOrdinary() ? 2 : 1
             }))
         });

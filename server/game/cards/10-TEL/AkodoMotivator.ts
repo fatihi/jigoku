@@ -21,7 +21,6 @@ class AkodoMotivator extends DrawCard {
                 }
             },
             gameAction: AbilityDsl.actions.discardAtRandom((context) => ({
-                // @ts-ignore
                 amount: context.event.amount
             }))
         });

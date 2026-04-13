@@ -18,7 +18,6 @@ class GanzuWarrior extends DrawCard {
                 targets: false,
                 message: '{0} resolves the {1}\'s effect',
                 ringCondition: (ring) =>
-                    // @ts-ignore
                     context.event.card.element.includes(ring.element),
                 messageArgs: (ring) => [context.player, ring],
                 gameAction: AbilityDsl.actions.resolveRingEffect({ player: context.player })

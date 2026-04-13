@@ -17,7 +17,6 @@ class KansenHaunt extends DrawCard {
             cost: AbilityDsl.costs.payHonor(2),
             gameAction: AbilityDsl.actions.resolveRingEffect((context) => ({
                 player: context.player,
-                // @ts-ignore
                 target: context.event.ring
             }))
         });

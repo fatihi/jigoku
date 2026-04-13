@@ -15,7 +15,6 @@ class AudienceChamber extends DrawCard {
                     event.card.getCost() >= 4
             },
             gameAction: AbilityDsl.actions.placeFate((context) => ({
-                // @ts-ignore
                 target: context.event.card
             }))
         });
