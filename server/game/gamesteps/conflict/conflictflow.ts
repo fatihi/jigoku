@@ -1,13 +1,13 @@
 import { AbilityContext } from '../../AbilityContext';
 import { BaseStepWithPipeline } from '../BaseStepWithPipeline';
-import Costs = require('../../Costs');
-import CovertAbility = require('../../KeywordAbilities/CovertAbility');
-import GameActions = require('../../GameActions/GameActions');
+import { discardCard, payFate, payFateToRing, payHonor } from '../../Costs';
+import CovertAbility from '../../KeywordAbilities/CovertAbility';
+import { bow, loseHonor, resolveConflictRing } from '../../GameActions/GameActions';
 import { SimpleStep } from '../SimpleStep';
 import ConflictActionWindow from './conflictactionwindow';
 import InitiateConflictPrompt from './initiateconflictprompt';
 import SelectDefendersPrompt from './selectdefendersprompt';
-import InitiateCardAbilityEvent = require('../../Events/InitiateCardAbilityEvent');
+import InitiateCardAbilityEvent from '../../Events/InitiateCardAbilityEvent';
 import AttackersMatrix from './attackersMatrix';
 
 import { Players, CardTypes, EventNames, EffectNames, Locations, ConflictTypes } from '../../Constants';
@@ -207,7 +207,7 @@ class ConflictFlow extends BaseStepWithPipeline {
                     this.conflict.attackingPlayer,
                     totalFateCost
                 );
-                Costs.payFate(totalFateCost).addEventsToArray(
+                payFate(totalFateCost).addEventsToArray(
                     costEvents,
                     this.game.getFrameworkContext(this.conflict.attackingPlayer)
                 );
@@ -218,7 +218,7 @@ class ConflictFlow extends BaseStepWithPipeline {
                     this.conflict.attackingPlayer,
                     totalHonorCost
                 );
-                Costs.payHonor(totalHonorCost).addEventsToArray(
+                payHonor(totalHonorCost).addEventsToArray(
                     costEvents,
                     this.game.getFrameworkContext(this.conflict.attackingPlayer)
                 );
@@ -236,10 +236,10 @@ class ConflictFlow extends BaseStepWithPipeline {
                     message: '{0} discards {1}',
                     messageArgs: (cards: any, player: any) => [player, cards]
                 };
-                Costs.discardCard(props).addEventsToArray(
+                discardCard(props).addEventsToArray(
                     costEvents,
                     this.game.getFrameworkContext(this.conflict.attackingPlayer),
-                    // @ts-ignore
+                    // @ts-expect-error -- legacy optional flag on discardCard cost
                     true
                 );
             }
@@ -304,10 +304,10 @@ class ConflictFlow extends BaseStepWithPipeline {
                 const costEvents: any[] = [];
                 let result = true;
                 let costToRings = province.sumEffects(EffectNames.FateCostToRingToDeclareConflictAgainst);
-                Costs.payFateToRing(costToRings).addEventsToArray(
+                payFateToRing(costToRings).addEventsToArray(
                     costEvents,
                     this.game.getFrameworkContext(this.conflict.attackingPlayer),
-                    // @ts-ignore
+                    // @ts-expect-error -- legacy optional flag on discardCard cost
                     result
                 );
                 this.game.queueSimpleStep(() => {
@@ -377,7 +377,7 @@ class ConflictFlow extends BaseStepWithPipeline {
                         );
                         this.game.actions
                             .takeFateFromRing({
-                                // @ts-ignore
+                                // @ts-expect-error -- legacy optional flag on discardCard cost
                                 origin: this.conflict.ring,
                                 recipient: this.conflict.attackingPlayer,
                                 amount: this.conflict.ring.fate
@@ -571,7 +571,6 @@ class ConflictFlow extends BaseStepWithPipeline {
                     )
             );
             events = events.concat(
-                // @ts-ignore
                 this.covert.map((context: any) =>
                     this.game.getEvent(EventNames.OnCovertResolved, { card: context.source, context: context })
                 )
@@ -673,7 +672,7 @@ class ConflictFlow extends BaseStepWithPipeline {
                     this.conflict.defendingPlayer,
                     totalHonorCost
                 );
-                Costs.payHonor(totalHonorCost).addEventsToArray(
+                payHonor(totalHonorCost).addEventsToArray(
                     costEvents,
                     this.game.getFrameworkContext(this.conflict.defendingPlayer)
                 );
@@ -825,7 +824,7 @@ class ConflictFlow extends BaseStepWithPipeline {
 
             const honorLoss = Math.max(0, 1 + honorLossMods);
             this.game.addMessage('{0} loses {1} honor for not defending the conflict', this.conflict.loser, honorLoss);
-            GameActions.loseHonor({ dueToUnopposed: true, amount: honorLoss }).resolve(
+            loseHonor({ dueToUnopposed: true, amount: honorLoss }).resolve(
                 this.conflict.loser,
                 this.game.getFrameworkContext(this.conflict.loser)
             );
@@ -861,7 +860,7 @@ class ConflictFlow extends BaseStepWithPipeline {
         }
 
         if(this.conflict.isAttackerTheWinner()) {
-            GameActions.resolveConflictRing().resolve(
+            resolveConflictRing().resolve(
                 this.conflict.ring,
                 this.game.getFrameworkContext(this.conflict.attackingPlayer)
             );
@@ -902,14 +901,14 @@ class ConflictFlow extends BaseStepWithPipeline {
 
         // Create bow events for attackers
         let attackerBowEvents = this.conflict.attackers.map((card: any) =>
-            GameActions.bow().getEvent(card, this.game.getFrameworkContext())
+            bow().getEvent(card, this.game.getFrameworkContext())
         );
         // Cancel any events where attacker shouldn't bow
         attackerBowEvents.forEach((event: any) => (event.cancelled = !event.card.bowsOnReturnHome()));
 
         // Create bow events for defenders
         let defenderBowEvents = this.conflict.defenders.map((card: any) =>
-            GameActions.bow().getEvent(card, this.game.getFrameworkContext())
+            bow().getEvent(card, this.game.getFrameworkContext())
         );
         // Cancel any events where defender shouldn't bow
         defenderBowEvents.forEach((event: any) => (event.cancelled = !event.card.bowsOnReturnHome()));
