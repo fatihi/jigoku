@@ -21,6 +21,4 @@ class SaadiyahAlMozedu extends DrawCard {
     }
 }
 
-
-
 export default SaadiyahAlMozedu;

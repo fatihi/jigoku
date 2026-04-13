@@ -24,6 +24,4 @@ class KaitoNobukai extends DrawCard {
     }
 }
 
-
-
 export default KaitoNobukai;

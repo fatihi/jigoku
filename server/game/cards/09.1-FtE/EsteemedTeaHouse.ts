@@ -30,6 +30,4 @@ class EsteemedTeaHouse extends DrawCard {
     }
 }
 
-
-
 export default EsteemedTeaHouse;
