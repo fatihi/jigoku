@@ -14,7 +14,7 @@ class ThirdWhiskerSneak extends DrawCard {
                 AbilityDsl.effects.immunity({
                     restricts: 'shadowlands'
                 })]
-        }),
+        });
 
         this.reaction({
             title: 'Add a card to your hand',
