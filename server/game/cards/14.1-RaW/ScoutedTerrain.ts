@@ -1,0 +1,25 @@
+import DrawCard from '../../drawcard';
+import AbilityDsl from '../../abilitydsl';
+import { Durations } from '../../Constants';
+
+class ScoutedTerrain extends DrawCard {
+    static id = 'scouted-terrain';
+
+    setupCardAbilities() {
+        this.action({
+            title: 'Allow attacking the stronghold',
+            condition: context => context.player.opponent && context.player.getNumberOfOpponentsFaceupProvinces() >= 4,
+            effect: 'allow {1}\'s stronghold to be attacked this phase',
+            effectArgs: context => [context.player.opponent],
+            gameAction: AbilityDsl.actions.playerLastingEffect(context => ({
+                targetController: context.player.opponent,
+                duration: Durations.UntilEndOfPhase,
+                effect: AbilityDsl.effects.strongholdCanBeAttacked()
+            }))
+        });
+    }
+}
+
+
+export default ScoutedTerrain;
+

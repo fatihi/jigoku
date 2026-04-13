@@ -1,0 +1,15 @@
+import DrawCard from '../../drawcard';
+
+class ShikshaScout extends DrawCard {
+    static id = 'shiksha-scout';
+
+    setupCardAbilities(ability) {
+        this.persistentEffect({
+            condition: context => context.source.isParticipating(),
+            effect: ability.effects.additionalCharactersInConflict(1)
+        });
+    }
+}
+
+
+export default ShikshaScout;

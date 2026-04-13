@@ -1,0 +1,26 @@
+import DrawCard from '../../drawcard';
+import {CardTypes, Durations, Phases} from '../../Constants';
+
+class ThoseWhoServe extends DrawCard {
+    static id = 'those-who-serve';
+
+    setupCardAbilities(ability) {
+        this.action({
+            title: 'Reduce the cost of your characters by 1 this phase',
+            phase: Phases.Dynasty,
+            effect: 'reduce the cost of their characters by 1 this phase',
+            gameAction: ability.actions.playerLastingEffect(context => ({
+                targetController: context.player,
+                duration: Durations.UntilEndOfPhase,
+                effect: ability.effects.reduceCost({
+                    match: card => card.type === CardTypes.Character,
+                    amount: 1,
+                    costFloor: 1
+                })
+            }))
+        });
+    }
+}
+
+
+export default ThoseWhoServe;

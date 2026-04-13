@@ -1,0 +1,35 @@
+import DrawCard from '../../drawcard';
+import AbilityDsl from '../../abilitydsl';
+import { CardTypes } from '../../Constants';
+
+class BayushiKachiko extends DrawCard {
+    static id = 'bayushi-kachiko';
+
+    setupCardAbilities() {
+        this.action({
+            title: 'Send a character home',
+            condition: context => this.game.isDuringConflict('political') && context.source.isParticipating(),
+            target: {
+                cardType: CardTypes.Character,
+                cardCondition: (card, context) => card.politicalSkill < context.source.politicalSkill && card.isParticipating(),
+                gameAction: AbilityDsl.actions.sequential([
+                    AbilityDsl.actions.sendHome(),
+                    AbilityDsl.actions.menuPrompt(context => ({
+                        activePromptTitle: 'Do you want to bow ' + context.target.name + '?',
+                        choices: ['Yes', 'No'],
+                        choiceHandler: (choice, displayMessage) => {
+                            if(displayMessage && choice === 'Yes') {
+                                context.game.addMessage('{0} chooses to bow {1} due to {2}\'s ability', context.player, context.target, context.source);
+                            }
+                            return { target: (choice === 'Yes' ? context.target : []) };
+                        },
+                        gameAction: AbilityDsl.actions.bow()
+                    }))
+                ])
+            }
+        });
+    }
+}
+
+
+export default BayushiKachiko;

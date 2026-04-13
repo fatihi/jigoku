@@ -1,0 +1,23 @@
+import DrawCard from '../../drawcard';
+import { Locations, Players, CardTypes } from '../../Constants';
+import AbilityDsl from '../../abilitydsl';
+
+class Charge extends DrawCard {
+    static id = 'charge';
+
+    setupCardAbilities() {
+        this.action({
+            title: 'Put a character into play from a province',
+            condition: () => this.game.currentConflict && this.game.currentConflict.conflictType === 'military',
+            target: {
+                cardType: CardTypes.Character,
+                location: Locations.Provinces,
+                controller: Players.Self,
+                gameAction: AbilityDsl.actions.putIntoConflict()
+            }
+        });
+    }
+}
+
+
+export default Charge;

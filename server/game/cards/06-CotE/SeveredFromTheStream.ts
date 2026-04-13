@@ -1,0 +1,20 @@
+import DrawCard from '../../drawcard';
+import AbilityDsl from '../../abilitydsl';
+
+class SeveredFromTheStream extends DrawCard {
+    static id = 'severed-from-the-stream';
+
+    setupCardAbilities() {
+        this.action({
+            title: 'Return player\'s rings',
+            gameAction: AbilityDsl.actions.performGloryCount({
+                gameAction: winner => winner && winner.opponent && AbilityDsl.actions.returnRing({
+                    target: winner.opponent.getClaimedRings()
+                })
+            })
+        });
+    }
+}
+
+
+export default SeveredFromTheStream;

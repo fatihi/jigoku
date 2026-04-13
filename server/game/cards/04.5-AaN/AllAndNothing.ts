@@ -1,0 +1,34 @@
+import DrawCard from '../../drawcard';
+import AbilityDsl from '../../abilitydsl';
+import { TargetModes } from '../../Constants';
+
+class AllAndNothing extends DrawCard {
+    static id = 'all-and-nothing';
+
+    setupCardAbilities() {
+        this.wouldInterrupt({
+            title: 'Replace a void effect with another ring effect',
+            when: {
+                onResolveRingElement: (event, context) =>
+                    event.ring.element === 'void' && event.player === context.player
+            },
+            target: {
+                mode: TargetModes.Ring,
+                ringCondition: (ring, context) =>
+                    context.event.physicalRing ? ring !== context.event.physicalRing : ring.element !== 'void',
+                gameAction: AbilityDsl.actions.cancel((context) => ({
+                    replacementGameAction: AbilityDsl.actions.resolveRingEffect({
+                        // @ts-ignore
+                        optional: context.event.optional,
+                        physicalRing: context.ring
+                    })
+                }))
+            },
+            effect: 'resolve {0} effect instead of the void effect',
+            gameAction: AbilityDsl.actions.draw()
+        });
+    }
+}
+
+
+export default AllAndNothing;

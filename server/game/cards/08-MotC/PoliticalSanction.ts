@@ -1,0 +1,29 @@
+import DrawCard from '../../drawcard';
+import AbilityDsl from '../../abilitydsl';
+
+class PoliticalSanction extends DrawCard {
+    static id = 'political-sanction';
+
+    setupCardAbilities() {
+        this.whileAttached({
+            effect: AbilityDsl.effects.cardCannot('triggerAbilities')
+        });
+    }
+
+    canPlay(context, playType) {
+        if(context.game.isDuringConflict('political')) {
+            let diff = this.game.currentConflict.attackerSkill - this.game.currentConflict.defenderSkill;
+            return context.player.isAttackingPlayer() ? diff > 0 : diff < 0 &&
+                super.canPlay(context, playType);
+        }
+
+        return false;
+    }
+
+    canPlayOn(card) {
+        return card.isParticipating() && super.canPlayOn(card);
+    }
+}
+
+
+export default PoliticalSanction;

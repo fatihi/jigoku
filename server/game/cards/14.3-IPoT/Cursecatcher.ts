@@ -1,0 +1,23 @@
+import DrawCard from '../../drawcard';
+import AbilityDsl from '../../abilitydsl';
+import { CardTypes } from '../../Constants';
+
+class Cursecatcher extends DrawCard {
+    static id = 'cursecatcher';
+
+    setupCardAbilities() {
+        this.wouldInterrupt({
+            title: 'Cancel province ability',
+            when: {
+                onInitiateAbilityEffects: event => event.card.type === CardTypes.Province && //province
+                    event.card.controller && event.card.controller.getDynastyCardsInProvince(event.card.location).some(a => a.isFacedown()) //any facedown cards
+            },
+            effect: 'cancel the effects of {1}\'s ability',
+            effectArgs: context => context.event.card,
+            gameAction: AbilityDsl.actions.cancel()
+        });
+    }
+}
+
+
+export default Cursecatcher;

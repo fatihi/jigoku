@@ -1,0 +1,28 @@
+import DrawCard from '../../drawcard';
+import { CardTypes } from '../../Constants';
+import AbilityDsl from '../../abilitydsl';
+
+class AdornedBarcha extends DrawCard {
+    static id = 'adorned-barcha';
+
+    setupCardAbilities() {
+        this.attachmentConditions({
+            myControl: true,
+            unique: true
+        });
+
+        this.action({
+            title: 'Move character into the conflict',
+            condition: context => context.source.parent && !context.source.parent.isParticipating() && this.game.isDuringConflict('military'),
+            target: {
+                cardType: CardTypes.Character,
+                cardCondition: card => card.isParticipating(),
+                gameAction: AbilityDsl.actions.bow()
+            },
+            gameAction: AbilityDsl.actions.moveToConflict(context => ({ target: context.source.parent }))
+        });
+    }
+}
+
+
+export default AdornedBarcha;

@@ -1,0 +1,23 @@
+import DrawCard from '../../drawcard';
+import { CardTypes } from '../../Constants';
+
+class SinisterSoshi extends DrawCard {
+    static id = 'sinister-soshi';
+
+    setupCardAbilities(ability) {
+        this.action({
+            title: 'Give a character -2/-2',
+            condition: () => this.game.isDuringConflict(),
+            target: {
+                cardType: CardTypes.Character,
+                cardCondition: card => card.isParticipating(),
+                gameAction: ability.actions.cardLastingEffect({ effect: ability.effects.modifyBothSkills(-2) })
+            },
+            effect: 'give {0} -2{1}/-2{2}',
+            effectArgs: () => ['military', 'political']
+        });
+    }
+}
+
+
+export default SinisterSoshi;

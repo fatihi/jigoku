@@ -1,0 +1,33 @@
+import DrawCard from '../../drawcard';
+import { Players, CardTypes, Elements } from '../../Constants';
+import AbilityDsl from '../../abilitydsl';
+
+const elementKey = 'alchemical-laboratory-fire';
+
+class AlchemicalLaboratory extends DrawCard {
+    static id = 'alchemical-laboratory';
+
+    setupCardAbilities() {
+        this.persistentEffect({
+            condition: context => (
+                this.game.rings[this.getCurrentElementSymbol(elementKey)].isConsideredClaimed(context.player)
+            ),
+            match: (card, context) => card.getType() === CardTypes.Attachment && card.parent && card.parent.controller !== context.player,
+            effect: AbilityDsl.effects.addKeyword('ancestral'),
+            targetController: Players.Self
+        });
+    }
+
+    getPrintedElementSymbols() {
+        let symbols = super.getPrintedElementSymbols();
+        symbols.push({
+            key: elementKey,
+            prettyName: 'Claimed Ring',
+            element: Elements.Fire
+        });
+        return symbols;
+    }
+}
+
+
+export default AlchemicalLaboratory;

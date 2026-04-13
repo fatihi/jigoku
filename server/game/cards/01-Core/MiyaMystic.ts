@@ -1,0 +1,23 @@
+import DrawCard from '../../drawcard';
+import { Phases, CardTypes } from '../../Constants';
+
+class MiyaMystic extends DrawCard {
+    static id = 'miya-mystic';
+
+    setupCardAbilities(ability) {
+        this.action({
+            title: 'Sacrifice to discard an attachment',
+            cost: ability.costs.sacrificeSelf(),
+            phase: Phases.Conflict,
+            target: {
+                cardType: CardTypes.Attachment,
+                gameAction: ability.actions.discardFromPlay()
+            }
+        });
+    }
+}
+
+
+export default MiyaMystic;
+
+

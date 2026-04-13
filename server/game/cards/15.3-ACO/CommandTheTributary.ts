@@ -1,0 +1,25 @@
+import DrawCard from '../../drawcard';
+import AbilityDsl from '../../abilitydsl';
+import { CardTypes, AbilityTypes } from '../../Constants';
+
+class CommandTheTributary extends DrawCard {
+    static id = 'command-the-tributary';
+
+    setupCardAbilities() {
+        this.whileAttached({
+            effect: AbilityDsl.effects.gainAbility(AbilityTypes.Action, {
+                title: 'Move 1 fate to a character',
+                target: {
+                    cardType: CardTypes.Character,
+                    gameAction: AbilityDsl.actions.placeFate((context) => ({
+                        origin: context.source,
+                        amount: 1
+                    }))
+                }
+            })
+        });
+    }
+}
+
+
+export default CommandTheTributary;

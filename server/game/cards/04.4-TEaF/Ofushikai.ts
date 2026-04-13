@@ -1,0 +1,39 @@
+import DrawCard from '../../drawcard';
+import { Durations, CardTypes, AbilityTypes } from '../../Constants';
+
+class Ofushukai extends DrawCard {
+    static id = 'ofushikai';
+
+    setupCardAbilities(ability) {
+        this.attachmentConditions({
+            myControl: true,
+            unique: true,
+            faction: 'phoenix'
+        });
+
+        this.grantedAbilityLimits = {};
+        this.whileAttached({
+            match: card => card.hasTrait('champion'),
+            effect: ability.effects.gainAbility(AbilityTypes.Action, {
+                title: 'Send a character home',
+                condition: context => context.source.isParticipating(),
+                effect: 'send {0} home and prevent it from attacking this phase',
+                printedAbility: false,
+                target: {
+                    cardType: CardTypes.Character,
+                    cardCondition: card => card.isParticipating(),
+                    gameAction: [
+                        ability.actions.sendHome(),
+                        ability.actions.cardLastingEffect({
+                            duration: Durations.UntilEndOfPhase,
+                            effect: ability.effects.cannotParticipateAsAttacker()
+                        })
+                    ]
+                }
+            })
+        });
+    }
+}
+
+
+export default Ofushukai;

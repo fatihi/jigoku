@@ -1,0 +1,20 @@
+import DrawCard from '../../drawcard';
+
+class WanderingRonin extends DrawCard {
+    static id = 'wandering-ronin';
+
+    setupCardAbilities(ability) {
+        this.action({
+            title: 'Give this character +2/+2',
+            condition: () => this.game.isDuringConflict(),
+            cost: ability.costs.removeFateFromSelf(),
+            effect: 'give himself +2{1}/+2{2}',
+            effectArgs: () => ['military', 'political'],
+            gameAction: ability.actions.cardLastingEffect({ effect: ability.effects.modifyBothSkills(2) }),
+            limit: ability.limit.perConflict(2)
+        });
+    }
+}
+
+
+export default WanderingRonin;

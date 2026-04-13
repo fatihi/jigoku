@@ -1,0 +1,32 @@
+import DrawCard from '../../drawcard';
+import AbilityDsl from '../../abilitydsl';
+import { CardTypes, Phases } from '../../Constants';
+
+class CommanderOfTheLegions extends DrawCard {
+    static id = 'commander-of-the-legions';
+
+    setupCardAbilities() {
+        this.persistentEffect({
+            match: (card, context) => card.isFaction('lion')
+            && card !== context.source
+            && card.controller === context.player,
+            effect: AbilityDsl.effects.modifyMilitarySkill(1)
+        });
+
+        this.persistentEffect({
+            condition: context =>
+                context.game.currentPhase === Phases.Fate && context.player.opponent
+                && context.player.honor >= context.player.opponent.honor + 5,
+            match: (card, context) =>
+                card.type === CardTypes.Character
+                && card.isFaction('lion')
+                && card.printedCost <= 3
+                && card !== context.source
+                && card.controller === context.player,
+            effect: AbilityDsl.effects.cardCannot('removeFate')
+        });
+    }
+}
+
+
+export default CommanderOfTheLegions;

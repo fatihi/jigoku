@@ -1,0 +1,23 @@
+import DrawCard from '../../drawcard';
+
+class NitenMaster extends DrawCard {
+    static id = 'niten-master';
+
+    setupCardAbilities(ability) {
+        this.reaction({
+            title: 'Ready this character',
+            when: {
+                onCardAttached: (event, context) => (
+                    event.parent === context.source &&
+                    event.card.hasTrait('weapon') &&
+                    event.card.controller === context.player
+                )
+            },
+            gameAction: ability.actions.ready(),
+            limit: ability.limit.perRound(2)
+        });
+    }
+}
+
+
+export default NitenMaster;

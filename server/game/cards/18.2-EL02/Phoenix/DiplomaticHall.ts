@@ -1,0 +1,27 @@
+import DrawCard from '../../../drawcard';
+import AbilityDsl from '../../../abilitydsl';
+import { TargetModes } from '../../../Constants';
+
+class DiplomaticHall extends DrawCard {
+    static id = 'diplomatic-hall';
+
+    setupCardAbilities() {
+        this.action({
+            condition: context => context.game.isDuringConflict('political'),
+            title: 'Select a player to draw a card',
+            target: {
+                mode: TargetModes.Select,
+                targets: true,
+                choices:  {
+                    [this.owner.name]: AbilityDsl.actions.draw({ target: this.owner }),
+                    [this.owner.opponent && this.owner.opponent.name || 'NA']: AbilityDsl.actions.draw({ target: this.owner.opponent })
+                }
+            },
+            effect: 'have {1} draw a card',
+            effectArgs: context => context.select === this.owner.name ? this.owner : this.owner.opponent
+        });
+    }
+}
+
+
+export default DiplomaticHall;
