@@ -209,8 +209,12 @@ class ActionWindow extends UiPrompt {
         const player1 = this.game.getFirstPlayer();
         const player2 = player1.opponent;
 
-        const p1 = this.bonusActions![player1.uuid];
-        const p2 = this.bonusActions![player2.uuid];
+        const bonusActions = this.bonusActions;
+        if(!bonusActions) {
+            return false;
+        }
+        const p1 = bonusActions[player1.uuid];
+        const p2 = bonusActions[player2.uuid];
 
         if(p1.actionCount > 0) {
             if(!p1.actionsTaken) {
