@@ -12,6 +12,7 @@ import { logger } from '../logger';
 import type PendingGame from '../pendinggame';
 import Socket from '../socket';
 import { detectBinary } from '../util';
+import { SendGameStateProfiler } from './SendGameStateProfiler';
 import { WsSocket } from './WsSocket';
 import * as env from '../env.js';
 
@@ -26,6 +27,7 @@ export class GameServer {
     private titleCardData: any;
     private shortCardData: any;
     private lastSentMessageCount = new Map<string, number>();
+    private profiler = new SendGameStateProfiler();
 
     constructor() {
         let privateKey: undefined | string;
@@ -176,7 +178,12 @@ export class GameServer {
     }
 
     sendGameState(game: Game): void {
+        const profile = this.profiler.enabled;
+        const t0 = profile ? this.profiler.now() : 0n;
+
         const sharedState = game.getSharedState();
+        const t1 = profile ? this.profiler.now() : 0n;
+
         const allMessages = game.gameChat.messages;
         const totalMessages = allMessages.length;
         let spectatorState: any = null;
@@ -185,18 +192,35 @@ export class GameServer {
         if(game.started) {
             game.recordHiddenInfoIfChanged();
         }
+        const t2 = profile ? this.profiler.now() : 0n;
+
+        let perViewerNs = 0n;
+        let spectatorNs = 0n;
+        let sendNs = 0n;
+        let playerCount = 0;
+        let spectatorCount = 0;
 
         for(const player of Object.values(game.getPlayersAndSpectators()) as any[]) {
             if(player.socket && !player.left && !player.disconnected) {
                 let state: any;
                 if(game.isSpectator(player)) {
+                    spectatorCount++;
                     // All spectators see the same game view — compute once
                     if(!spectatorState) {
+                        const s0 = profile ? this.profiler.now() : 0n;
                         spectatorState = game.getState(player.name, sharedState);
+                        if(profile) {
+                            spectatorNs += this.profiler.now() - s0;
+                        }
                     }
                     state = spectatorState;
                 } else {
+                    playerCount++;
+                    const p0 = profile ? this.profiler.now() : 0n;
                     state = game.getState(player.name, sharedState);
+                    if(profile) {
+                        perViewerNs += this.profiler.now() - p0;
+                    }
                 }
 
                 // Send only new messages since last send
@@ -211,8 +235,26 @@ export class GameServer {
                     newMessages: lastSent > 0
                 });
 
+                const w0 = profile ? this.profiler.now() : 0n;
                 player.socket.send('gamestate', stateWithMessages);
+                if(profile) {
+                    sendNs += this.profiler.now() - w0;
+                }
             }
+        }
+
+        if(profile) {
+            const total = this.profiler.now() - t0;
+            this.profiler.record({
+                sharedState: t1 - t0,
+                hiddenInfo: t2 - t1,
+                perViewer: perViewerNs,
+                spectator: spectatorNs,
+                send: sendNs,
+                total,
+                players: playerCount,
+                spectators: spectatorCount
+            });
         }
     }
 
