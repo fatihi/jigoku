@@ -4,7 +4,7 @@ import DrawCard from '../../drawcard';
 
 const agreeableCost = () => ({
     action: { name: 'agreeableArrangementCost' },
-    getActionName(context) { // eslint-disable-line no-unused-vars
+    getActionName(_context) {
         return 'agreeableArrangementCost';
     },
     getCostMessage: function (context) {

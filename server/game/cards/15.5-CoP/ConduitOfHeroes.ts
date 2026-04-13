@@ -5,7 +5,7 @@ import AbilityDsl from '../../abilitydsl';
 const conduitOfHeroesCost = function () {
     return {
         action: { name: 'conduitOfHeroesCost' },
-        getActionName(context) { // eslint-disable-line no-unused-vars
+        getActionName(_context) {
             return 'conduitOfHeroesCost';
         },
         getCostMessage: function (context) {

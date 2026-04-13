@@ -4,10 +4,10 @@ import AbilityDsl from '../../abilitydsl';
 const accursedSummoningCost = function () {
     return {
         action: { name: 'accursedSummoningCost' },
-        getActionName(context) { // eslint-disable-line no-unused-vars
+        getActionName(_context) {
             return 'accursedSummoningCost';
         },
-        getCostMessage: function (context) { // eslint-disable-line no-unused-vars
+        getCostMessage: function (_context) {
             return ['losing {0} honor'];
         },
         canPay: function (context) {

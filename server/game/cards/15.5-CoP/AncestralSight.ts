@@ -9,10 +9,10 @@ const isCopyInPlay = function(card, context) {
 const ancestralSightCost = function () {
     return {
         action: { name: 'ancestralSightCost' },
-        getActionName(context) { // eslint-disable-line no-unused-vars
+        getActionName(_context) {
             return 'ancestralSightCost';
         },
-        getCostMessage: function (context) { // eslint-disable-line no-unused-vars
+        getCostMessage: function (_context) {
             return ['returning {0} to the bottom of the dynasty deck'];
         },
         canPay: function (context) {

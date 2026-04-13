@@ -153,7 +153,7 @@ class BaseCardSelector {
         return this.findPossibleCards(context).filter((card: any) => this.canTarget(card, context, choosingPlayer));
     }
 
-    hasEnoughSelected(selectedCards: any[], context?: any): boolean {
+    hasEnoughSelected(selectedCards: any[], _context?: any): boolean {
         return this.optional || selectedCards.length > 0;
     }
 
@@ -161,23 +161,23 @@ class BaseCardSelector {
         return this.findPossibleCards(context).some((card: any) => this.canTarget(card, context, choosingPlayer));
     }
 
-    defaultActivePromptTitle(context?: any): string {
+    defaultActivePromptTitle(_context?: any): string {
         return 'Choose cards';
     }
 
-    automaticFireOnSelect(context?: any): boolean {
+    automaticFireOnSelect(_context?: any): boolean {
         return false;
     }
 
-    wouldExceedLimit(selectedCards: any[], card?: any): boolean {
+    wouldExceedLimit(_selectedCards: any[], _card?: any): boolean {
         return false;
     }
 
-    hasReachedLimit(selectedCards: any[], context?: any): boolean {
+    hasReachedLimit(_selectedCards: any[], _context?: any): boolean {
         return false;
     }
 
-    hasExceededLimit(selectedCards: any[], context?: any): boolean {
+    hasExceededLimit(_selectedCards: any[], _context?: any): boolean {
         return false;
     }
 

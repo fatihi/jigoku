@@ -4,10 +4,10 @@ import { CardTypes, Locations, Players, Durations } from '../../Constants';
 
 const exposedCourtyardCost = () => ({
     action: { name: 'exposedCourtyardCost' },
-    getActionName(context) { // eslint-disable-line no-unused-vars
+    getActionName(_context) {
         return 'exposedCourtyardCost';
     },
-    getCostMessage: function (context) { // eslint-disable-line no-unused-vars
+    getCostMessage: function (_context) {
         return ['discarding {0}'];
     },
     canPay: function (context) {
