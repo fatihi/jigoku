@@ -1421,7 +1421,8 @@ class Game extends EventEmitter {
 
     recordHiddenInfoIfChanged(): void {
         const fingerprint = this.getHiddenInfoFingerprint();
-        if(fingerprint === this.lastHiddenInfoFingerprint) {
+        if(fingerprint === this.lastHiddenInfoFingerprint && this.hiddenInfoLog.length > 0) {
+            this.hiddenInfoLog.push(this.hiddenInfoLog[this.hiddenInfoLog.length - 1]);
             return;
         }
         this.lastHiddenInfoFingerprint = fingerprint;
