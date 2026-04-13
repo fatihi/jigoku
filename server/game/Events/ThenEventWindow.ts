@@ -1,6 +1,5 @@
 import EventWindow from './EventWindow';
 import { AbilityTypes } from '../Constants';
-import type { Event } from './Event';
 
 export default class ThenEventWindow extends EventWindow {
     openWindow(abilityType: AbilityTypes) {
