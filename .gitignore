@@ -10,3 +10,6 @@ server/logs/*.gz
 build/
 .idea/
 test/json/Card
+
+# Development plans
+docs/superpowers/
