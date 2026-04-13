@@ -1,4 +1,4 @@
-import CardSelector = require('../CardSelector.js');
+import CardSelector from '../CardSelector.js';
 import { CardTypes, Stages, Players, Locations } from '../Constants.js';
 
 class AbilityTargetElementSymbol {

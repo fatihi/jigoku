@@ -1,4 +1,4 @@
-import BaseAbility = require('../baseability');
+import BaseAbility from '../baseability';
 import { AbilityTypes } from '../Constants';
 
 class CovertAbility extends BaseAbility {

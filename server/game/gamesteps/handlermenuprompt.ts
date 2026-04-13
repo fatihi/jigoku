@@ -1,5 +1,5 @@
 import { AbilityContext } from '../AbilityContext';
-import EffectSource = require('../EffectSource');
+import EffectSource from '../EffectSource';
 import { UiPrompt } from './UiPrompt';
 import type Player from '../player';
 

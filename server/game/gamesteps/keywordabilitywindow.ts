@@ -1,4 +1,4 @@
-import ForcedTriggeredAbilityWindow = require('./forcedtriggeredabilitywindow');
+import ForcedTriggeredAbilityWindow from './forcedtriggeredabilitywindow';
 
 class KeywordAbilityWindow extends ForcedTriggeredAbilityWindow {
     constructor(game: any, abilityType: any, window: any, eventsToExclude: any[] = []) {

@@ -1,6 +1,6 @@
 import { AbilityContext } from '../AbilityContext';
-import CardSelector = require('../CardSelector');
-import EffectSource = require('../EffectSource');
+import CardSelector from '../CardSelector';
+import EffectSource from '../EffectSource';
 import { UiPrompt } from './UiPrompt';
 import type Player from '../player';
 

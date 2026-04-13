@@ -1,5 +1,5 @@
 import { UiPrompt } from './UiPrompt';
-import GameActions = require('../GameActions/GameActions');
+import { attach } from '../GameActions/GameActions';
 import { AbilityContext } from '../AbilityContext';
 import { Players } from '../Constants';
 import type Player from '../player';
@@ -21,9 +21,9 @@ class AttachmentPrompt extends UiPrompt {
             source: 'Play Attachment',
             activePromptTitle: 'Select target for attachment',
             controller: Players.Self,
-            gameAction: GameActions.attach({ attachment: this.attachmentCard }),
+            gameAction: attach({ attachment: this.attachmentCard }),
             onSelect: (player: Player, card: any) => {
-                GameActions.attach({ attachment: this.attachmentCard }).resolve(card, new AbilityContext({ game: this.game, player: this.player, source: card }));
+                attach({ attachment: this.attachmentCard }).resolve(card, new AbilityContext({ game: this.game, player: this.player, source: card }));
                 return true;
             }
         });

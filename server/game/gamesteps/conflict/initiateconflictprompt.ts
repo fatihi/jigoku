@@ -2,7 +2,7 @@ import { UiPrompt } from '../UiPrompt';
 import { Locations, CardTypes } from '../../Constants';
 import AttackersMatrix from './attackersMatrix';
 import { AbilityContext } from '../../AbilityContext';
-import CovertAbility = require('../../KeywordAbilities/CovertAbility');
+import CovertAbility from '../../KeywordAbilities/CovertAbility';
 import { GameModes } from '../../../GameModes';
 import type Player from '../../player';
 

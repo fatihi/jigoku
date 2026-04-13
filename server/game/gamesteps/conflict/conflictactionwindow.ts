@@ -1,4 +1,4 @@
-import ActionWindow = require('../actionwindow');
+import ActionWindow from '../actionwindow';
 
 const capitalize: Record<string, string> = {
     military: 'Military',

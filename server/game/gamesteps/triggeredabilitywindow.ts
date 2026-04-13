@@ -1,4 +1,4 @@
-import ForcedTriggeredAbilityWindow = require('./forcedtriggeredabilitywindow');
+import ForcedTriggeredAbilityWindow from './forcedtriggeredabilitywindow';
 import { TriggeredAbilityWindowTitle } from './TriggeredAbilityWindowTitle';
 import { CardTypes, EventNames, AbilityTypes } from '../Constants';
 import type Player from '../player';

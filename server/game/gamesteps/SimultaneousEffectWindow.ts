@@ -1,4 +1,4 @@
-import ForcedTriggeredAbilityWindow = require('./forcedtriggeredabilitywindow');
+import ForcedTriggeredAbilityWindow from './forcedtriggeredabilitywindow';
 
 class SimultaneousEffectWindow extends ForcedTriggeredAbilityWindow {
     constructor(game: any) {
